@@ -243,7 +243,7 @@
             {
                 if (new_scan_btn.Text == CONSTANT.FIRST_SCAN)
                 {
-                    if (MessageBox.Show("search size:" + (processManager.MappedSectionList.TotalMemorySize / 1024).ToString() + "KB") != DialogResult.OK)
+                    if (MessageBox.Show("search size:" + (processManager.MappedSectionList.TotalMemorySize / (1024 * 1024)).ToString() + "MB", "First Scan", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
                     {
                         return;
                     }
@@ -255,6 +255,7 @@
                     new_scan_btn.Enabled = true;
                     valueTypeList.Enabled = false;
                     alignment_box.Enabled = false;
+                    trashFilter_box.Enabled = false;
                     //section_list_box.lo = false;
 
                     new_scan_worker.RunWorkerAsync();
@@ -265,6 +266,7 @@
                 {
                     valueTypeList.Enabled = true;
                     alignment_box.Enabled = true;
+                    trashFilter_box.Enabled = true;
                     //section_list_box.Enabled = true;
                     refresh_btn.Enabled = false;
                     next_scan_btn.Enabled = false;
@@ -844,6 +846,7 @@
                 destOperator.SetRuntime(dataCheatOperator);
             }
         }
+        
         private void processes_comboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             try
@@ -857,12 +860,12 @@
 
                 ProcessInfo processInfo = processManager.GetProcessInfo(processes_comboBox.Text);
                 Util.DefaultProcessID = processInfo.pid;
-                processManager.MappedSectionList.InitMemorySectionList(processInfo);
+                processManager.MappedSectionList.InitMemorySectionList(processInfo, trashFilter_box.Checked);
 
                 section_list_box.BeginUpdate();
-                for (int i = 0; i < processManager.MappedSectionList.Count; ++i)
+                for (int section_idx = 0; section_idx < processManager.MappedSectionList.Count; ++section_idx)
                 {
-                    section_list_box.Items.Add(processManager.MappedSectionList.GetSectionName(i), false);
+                    section_list_box.Items.Add(processManager.MappedSectionList.GetSectionName(section_idx), false);
                 }
                 section_list_box.EndUpdate();
             }
@@ -879,13 +882,18 @@
 				
                 MemoryHelper.Connect(ip_box.Text);
 
+                int selectedIdx = 0;
                 this.processes_comboBox.Items.Clear();
                 ProcessList pl = MemoryHelper.GetProcessList();
                 foreach (Process process in pl.processes)
                 {
-                    this.processes_comboBox.Items.Add(process.name);
+                    int idx = this.processes_comboBox.Items.Add(process.name);
+                    if (process.name == CONSTANT.DEFAULT_PROCESS)
+                    {
+                        selectedIdx = idx;
+                    }
                 }
-                this.processes_comboBox.SelectedIndex = 0;
+                this.processes_comboBox.SelectedIndex = selectedIdx;
             }
             catch (Exception exception)
             {
@@ -1146,11 +1154,9 @@
 
             if (sectionID >= 0)
             {
-                int offset = 0;
-
                 MappedSection section = processManager.MappedSectionList[sectionID];
 
-                offset = (int)(address - section.Start);
+                int offset = (int)(address - section.Start);
                 HexEditor hexEdit = new HexEditor(memoryHelper, offset, section);
                 hexEdit.Show(this);
             }
@@ -1186,6 +1192,38 @@
             {
                 Util.Version = versions[(string)version_list.SelectedItem];
             }
+        }
+
+        private void result_list_item_find_pointer_Click(object sender, EventArgs e)
+        {
+            if (result_list_view.SelectedItems == null)
+                return;
+            
+            if (result_list_view.SelectedItems.Count != 1)
+                return;
+
+            try
+            {
+                ulong address = ulong.Parse(result_list_view.SelectedItems[0].
+                                    SubItems[RESULT_LIST_ADDRESS].Text, NumberStyles.HexNumber);
+                string type = result_list_view.SelectedItems[0].SubItems[RESULT_LIST_TYPE].Text;
+
+                PointerFinder pointerFinder = new PointerFinder(this, address, type, processManager, cheat_list_view);
+                pointerFinder.Show();
+            }
+            catch
+            {
+
+            }
+        }
+
+        private void trashFilterBox_CheckedChanged(object sender, EventArgs e)
+        {
+            int idx = processes_comboBox.SelectedIndex;
+            if (idx == -1) return;
+
+            processes_comboBox.SelectedIndex = 0;
+            processes_comboBox.SelectedIndex = idx;
         }
     }
 }

@@ -57,7 +57,7 @@ namespace PS4_Cheater
 
                 MemoryHelper memoryHelper = new MemoryHelper(false, processInfo.pid);
                 MappedSectionList mappedSectionList = processManager.MappedSectionList;
-                mappedSectionList.InitMemorySectionList(processInfo);
+                mappedSectionList.InitMemorySectionList(processInfo, false);
                 List<MappedSection> sectionList = mappedSectionList.GetMappedSectionList(section_name, section_prot);
 
                 if (sectionList.Count != 1)
@@ -85,8 +85,9 @@ namespace PS4_Cheater
 
         public const uint MAJOR_VERSION = 1;
         public const uint SECONDARY_VERSION = 4;
-        public const uint THIRD_VERSION = 8;
+        public const uint THIRD_VERSION = 9;
 
+        public const string DEFAULT_PROCESS = "eboot.bin";
         public const string EXACT_VALUE = "Exact Value";
         public const string FUZZY_VALUE = "Fuzzy Value";
         public const string INCREASED_VALUE = "Increased Value";

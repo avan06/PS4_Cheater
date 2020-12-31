@@ -103,6 +103,8 @@ namespace PS4_Cheater
             this.result_list_view_separator = new System.Windows.Forms.ToolStripSeparator();
             this.result_list_view_view_item = new System.Windows.Forms.ToolStripMenuItem();
             this.result_list_view_dump_item = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.result_list_item_find_pointer = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.version_list = new System.Windows.Forms.ComboBox();
             this.processes_comboBox = new System.Windows.Forms.ComboBox();
@@ -110,6 +112,7 @@ namespace PS4_Cheater
             this.port_box = new System.Windows.Forms.TextBox();
             this.send_payload_btn = new System.Windows.Forms.Button();
             this.get_processes_btn = new System.Windows.Forms.Button();
+            this.trashFilter_box = new System.Windows.Forms.CheckBox();
             this.hex_box = new System.Windows.Forms.CheckBox();
             this.alignment_box = new System.Windows.Forms.CheckBox();
             this.value_1_box = new System.Windows.Forms.TextBox();
@@ -543,9 +546,11 @@ namespace PS4_Cheater
             this.result_list_view_add_to_cheat_list,
             this.result_list_view_separator,
             this.result_list_view_view_item,
-            this.result_list_view_dump_item});
+            this.result_list_view_dump_item,
+            this.toolStripSeparator1,
+            this.result_list_item_find_pointer});
             this.result_list_menu.Name = "result_list_menu";
-            this.result_list_menu.Size = new System.Drawing.Size(171, 76);
+            this.result_list_menu.Size = new System.Drawing.Size(171, 104);
             // 
             // result_list_view_add_to_cheat_list
             // 
@@ -573,6 +578,18 @@ namespace PS4_Cheater
             this.result_list_view_dump_item.Text = "Dump";
             this.result_list_view_dump_item.Click += new System.EventHandler(this.dump_item_Click);
             // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(167, 6);
+            // 
+            // result_list_item_find_pointer
+            // 
+            this.result_list_item_find_pointer.Name = "result_list_item_find_pointer";
+            this.result_list_item_find_pointer.Size = new System.Drawing.Size(170, 22);
+            this.result_list_item_find_pointer.Text = "Find Pointer";
+            this.result_list_item_find_pointer.Click += new System.EventHandler(this.result_list_item_find_pointer_Click);
+            // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -592,6 +609,7 @@ namespace PS4_Cheater
             // 
             // splitContainer2.Panel2
             // 
+            this.splitContainer2.Panel2.Controls.Add(this.trashFilter_box);
             this.splitContainer2.Panel2.Controls.Add(this.value_box);
             this.splitContainer2.Panel2.Controls.Add(this.hex_box);
             this.splitContainer2.Panel2.Controls.Add(this.alignment_box);
@@ -714,6 +732,17 @@ namespace PS4_Cheater
             this.get_processes_btn.UseVisualStyleBackColor = false;
             this.get_processes_btn.Click += new System.EventHandler(this.get_processes_btn_Click);
             // 
+            // trashFilter_box
+            // 
+            this.trashFilter_box.AutoSize = true;
+            this.trashFilter_box.Location = new System.Drawing.Point(186, 273);
+            this.trashFilter_box.Name = "trashFilter_box";
+            this.trashFilter_box.Size = new System.Drawing.Size(48, 16);
+            this.trashFilter_box.TabIndex = 33;
+            this.trashFilter_box.Text = "Filter";
+            this.trashFilter_box.UseVisualStyleBackColor = true;
+            this.trashFilter_box.CheckedChanged += new System.EventHandler(this.trashFilterBox_CheckedChanged);
+            // 
             // hex_box
             // 
             this.hex_box.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -731,7 +760,7 @@ namespace PS4_Cheater
             this.alignment_box.AutoSize = true;
             this.alignment_box.Checked = true;
             this.alignment_box.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.alignment_box.Location = new System.Drawing.Point(186, 273);
+            this.alignment_box.Location = new System.Drawing.Point(74, 273);
             this.alignment_box.Name = "alignment_box";
             this.alignment_box.Size = new System.Drawing.Size(73, 16);
             this.alignment_box.TabIndex = 9;
@@ -1002,5 +1031,8 @@ namespace PS4_Cheater
         private CheckBox hex_box;
         private ToolStripMenuItem cheat_list_item_find_pointer;
         private ToolStripSeparator cheat_list_item_separator_2;
+        private ToolStripSeparator toolStripSeparator1;
+        private ToolStripMenuItem result_list_item_find_pointer;
+        private CheckBox trashFilter_box;
     }
 }

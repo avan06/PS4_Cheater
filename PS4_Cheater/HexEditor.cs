@@ -64,6 +64,10 @@ namespace PS4_Cheater
             {
                 hexBox.SelectionStart = line * hexBox.BytesPerLine + column;
                 hexBox.SelectionLength = 4;
+                if (hexBox.ColumnInfoVisible)
+                {
+                    line -= 2;
+                }
                 hexBox.ScrollByteIntoView((line + hexBox.Height / (int)hexBox.CharSize.Height - 1) * hexBox.BytesPerLine + column);
             }
         }
@@ -149,6 +153,48 @@ namespace PS4_Cheater
             findOptions.Type = FindType.Hex;
             findOptions.Hex = MemoryHelper.string_to_hex_bytes(input_box.Text);
             hexBox.Find(findOptions);
+        }
+
+        private void hexBox_SelectionStartChanged(object sender, EventArgs e)
+        {
+            if (hexBox.SelectionStart <= 0)
+            {
+                return;
+            }
+            List<byte> tmpBList = new List<byte>();
+            int info1 = 0, info2 = 0;
+            uint info4 = 0;
+            ulong info8 = 0;
+            float infoF = 0;
+            double infoD = 0;
+            info_box.Text = hexBox.ByteProvider.ReadByte(hexBox.SelectionStart).ToString("X");
+            for (int idx = 0; idx <= 8; ++idx)
+            {
+                switch (idx)
+                {
+                    case 1:
+                        info1 = Convert.ToUInt16(tmpBList[0]);
+                        break;
+                    case 2:
+                        info2 = BitConverter.ToUInt16(tmpBList.ToArray(), 0);
+                        break;
+                    case 4:
+                        info4 = BitConverter.ToUInt32(tmpBList.ToArray(), 0);
+                        infoF = BitConverter.ToSingle(tmpBList.ToArray(), 0);
+                        break;
+                    case 8:
+                        info8 = BitConverter.ToUInt64(tmpBList.ToArray(), 0);
+                        infoD = BitConverter.ToDouble(tmpBList.ToArray(), 0);
+                        break;
+                }
+                tmpBList.Add(hexBox.ByteProvider.ReadByte(hexBox.SelectionStart + idx));
+            }
+            info_box.Text = string.Format(@"1: {0:X}={0}
+2: {1:X}={1}
+4: {2:X}={2}
+8: {3:X}={3}
+F: {4}
+D: {4}", info1, info2, info4, info8, infoF, infoD);
         }
     }
 }

@@ -404,9 +404,9 @@ namespace PS4_Cheater
             MappedSection sectionInfo = mapped_section_list[section_idx];
 
             StringBuilder section_name = new StringBuilder();
+            section_name.Append(String.Format("{0:X}", sectionInfo.Start) + "-");
             section_name.Append(sectionInfo.Name + "-");
             section_name.Append(String.Format("{0:X}", sectionInfo.Prot) + "-");
-            section_name.Append(String.Format("{0:X}", sectionInfo.Start) + "-");
             section_name.Append((sectionInfo.Length / 1024).ToString() + "KB");
 
             return section_name.ToString();
@@ -425,8 +425,9 @@ namespace PS4_Cheater
             }
             return result_list;
         }
+        private bool IsSonyTrash(string name) => name.StartsWith("libSce") || name.StartsWith("libc.prx") || (name.StartsWith("SceShell") || name.StartsWith("SceLib")) || (name.StartsWith("SceNp") || name.StartsWith("SceVoice") || (name.StartsWith("SceFios") || name.StartsWith("libkernel"))) || name.StartsWith("SceVdec");
 
-        public void InitMemorySectionList(ProcessInfo pi)
+        public void InitMemorySectionList(ProcessInfo pi, bool isTrashFilter)
         {
             mapped_section_list.Clear();
             TotalMemorySize = 0;
@@ -439,6 +440,12 @@ namespace PS4_Cheater
                     ulong length = entry.end - entry.start;
                     ulong start = entry.start;
                     string name = entry.name;
+                    ulong offset = entry.offset;
+
+                    if (isTrashFilter && IsSonyTrash(name))
+                    {
+                        continue;
+                    }
                     int idx = 0;
                     ulong buffer_length = 1024 * 1024 * 128;
 
@@ -466,6 +473,10 @@ namespace PS4_Cheater
                         mappedSection.Start = start;
                         mappedSection.Length = (int)cur_length;
                         mappedSection.Name = entry.name + "[" + idx + "]";
+                        if (offset > 0)
+                        {
+                            mappedSection.Name += "[" + offset.ToString("X") + "]";
+                        }
                         mappedSection.Check = false;
                         mappedSection.Prot = entry.prot;
 

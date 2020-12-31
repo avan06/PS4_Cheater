@@ -32,13 +32,14 @@
         {
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.hexBox = new Be.Windows.Forms.HexBox();
+            this.info_box = new System.Windows.Forms.TextBox();
+            this.input_box = new System.Windows.Forms.TextBox();
+            this.find = new System.Windows.Forms.Button();
             this.refresh_btn = new System.Windows.Forms.Button();
             this.previous_btn = new System.Windows.Forms.Button();
             this.commit_btn = new System.Windows.Forms.Button();
             this.next_btn = new System.Windows.Forms.Button();
             this.page_list = new System.Windows.Forms.ComboBox();
-            this.find = new System.Windows.Forms.Button();
-            this.input_box = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -57,6 +58,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.info_box);
             this.splitContainer1.Panel2.Controls.Add(this.input_box);
             this.splitContainer1.Panel2.Controls.Add(this.find);
             this.splitContainer1.Panel2.Controls.Add(this.refresh_btn);
@@ -70,18 +72,47 @@
             // 
             // hexBox
             // 
+            this.hexBox.ColumnInfoVisible = true;
             this.hexBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.hexBox.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.hexBox.GroupSeparatorVisible = true;
             this.hexBox.LineInfoVisible = true;
             this.hexBox.Location = new System.Drawing.Point(0, 0);
             this.hexBox.Name = "hexBox";
             this.hexBox.ShadowSelectionColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(60)))), ((int)(((byte)(188)))), ((int)(((byte)(255)))));
-            this.hexBox.ShadowSelectionVisible = false;
             this.hexBox.Size = new System.Drawing.Size(623, 581);
             this.hexBox.StringViewVisible = true;
             this.hexBox.TabIndex = 11;
             this.hexBox.UseFixedBytesPerLine = true;
             this.hexBox.VScrollBarVisible = true;
+            this.hexBox.SelectionStartChanged += new System.EventHandler(this.hexBox_SelectionStartChanged);
+            // 
+            // info_box
+            // 
+            this.info_box.BackColor = System.Drawing.SystemColors.Control;
+            this.info_box.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.info_box.Location = new System.Drawing.Point(3, 359);
+            this.info_box.Multiline = true;
+            this.info_box.Name = "info_box";
+            this.info_box.Size = new System.Drawing.Size(192, 210);
+            this.info_box.TabIndex = 19;
+            // 
+            // input_box
+            // 
+            this.input_box.Location = new System.Drawing.Point(15, 281);
+            this.input_box.Name = "input_box";
+            this.input_box.Size = new System.Drawing.Size(160, 22);
+            this.input_box.TabIndex = 18;
+            // 
+            // find
+            // 
+            this.find.Location = new System.Drawing.Point(15, 327);
+            this.find.Name = "find";
+            this.find.Size = new System.Drawing.Size(160, 23);
+            this.find.TabIndex = 17;
+            this.find.Text = "Find";
+            this.find.UseVisualStyleBackColor = true;
+            this.find.Click += new System.EventHandler(this.find_Click);
             // 
             // refresh_btn
             // 
@@ -143,30 +174,12 @@
             this.page_list.TabIndex = 14;
             this.page_list.SelectedIndexChanged += new System.EventHandler(this.page_list_SelectedIndexChanged);
             // 
-            // find
-            // 
-            this.find.Location = new System.Drawing.Point(15, 327);
-            this.find.Name = "find";
-            this.find.Size = new System.Drawing.Size(160, 23);
-            this.find.TabIndex = 17;
-            this.find.Text = "Find";
-            this.find.UseVisualStyleBackColor = true;
-            this.find.Click += new System.EventHandler(this.find_Click);
-            // 
-            // input_box
-            // 
-            this.input_box.Location = new System.Drawing.Point(15, 281);
-            this.input_box.Name = "input_box";
-            this.input_box.Size = new System.Drawing.Size(160, 21);
-            this.input_box.TabIndex = 18;
-            // 
             // HexEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(825, 581);
             this.Controls.Add(this.splitContainer1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Name = "HexEditor";
             this.Text = "HexEditor";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.HexEdit_FormClosing);
@@ -190,5 +203,6 @@
         private ComboBox page_list;
         private TextBox input_box;
         private Button find;
+        private TextBox info_box;
     }
 }

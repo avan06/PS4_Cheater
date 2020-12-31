@@ -12,61 +12,43 @@ namespace PS4_Cheater
 
     class GameInfo
     {
-        const string GAME_INFO_4_05_PROCESS_NAME = "SceCdlgApp";
-        const string GAME_INFO_4_05_SECTION_NAME = "libSceCdlgUtilServer.sprx";
-        const int GAME_INFO_4_05_SECTION_PROT = 3;
-        const int GAME_INFO_4_05_ID_OFFSET = 0XA0;
-        const int GAME_INFO_4_05_VERSION_OFFSET = 0XC8;
+        private readonly Dictionary<int, Dictionary<string, object>> gameInfos = new Dictionary<int, Dictionary<string, object>>()
+        {
+            [0] = new Dictionary<string, object>() //default
+            {
+                ["process_name"] = "SceCdlgApp",
+                ["section_name"] = "libSceCdlgUtilServer.sprx",
+                ["section_prot"] = 3,
+                ["id_offset"] = 0XA0,
+                ["version_offset"] = 0XC8
+            },
+            //[672] = new Dictionary<string, object>() //custom
+            //{
+            //    ["process_name"] = "SceCdlgApp",
+            //    ["section_name"] = "libSceCdlgUtilServer.sprx",
+            //    ["section_prot"] = 3,
+            //    ["id_offset"] = 0XA0,
+            //    ["version_offset"] = 0XC8
+            //},
+        };
 
-        const string GAME_INFO_4_55_PROCESS_NAME = "SceCdlgApp";
-        const string GAME_INFO_4_55_SECTION_NAME = "libSceCdlgUtilServer.sprx";
-        const int GAME_INFO_4_55_SECTION_PROT = 3;
-        const int GAME_INFO_4_55_ID_OFFSET = 0XA0;
-        const int GAME_INFO_4_55_VERSION_OFFSET = 0XC8;
-
-		const string GAME_INFO_5_05_PROCESS_NAME = "SceCdlgApp";
-        const string GAME_INFO_5_05_SECTION_NAME = "libSceCdlgUtilServer.sprx";
-        const int GAME_INFO_5_05_SECTION_PROT = 3;
-        const int GAME_INFO_5_05_ID_OFFSET = 0XA0;
-        const int GAME_INFO_5_05_VERSION_OFFSET = 0XC8;
-		
         public string GameID = "";
         public string Version = "";
 
         public GameInfo()
         {
-            string process_name = "";
-            string section_name = "";
-            ulong id_offset = 0;
-            ulong version_offset = 0;
-            int section_prot = 0;
-
-            switch (Util.Version)
+            Dictionary<string, object> gameInfo = gameInfos[0];
+            if (gameInfos.ContainsKey(Util.Version))
             {
-                case 405:
-                    process_name = GAME_INFO_4_05_PROCESS_NAME;
-                    section_name = GAME_INFO_4_05_SECTION_NAME;
-                    id_offset = GAME_INFO_4_05_ID_OFFSET;
-                    version_offset = GAME_INFO_4_05_VERSION_OFFSET;
-                    section_prot = GAME_INFO_4_05_SECTION_PROT;
-                    break;
-                case 455:
-                    process_name = GAME_INFO_4_55_PROCESS_NAME;
-                    section_name = GAME_INFO_4_55_SECTION_NAME;
-                    id_offset = GAME_INFO_4_55_ID_OFFSET;
-                    version_offset = GAME_INFO_4_55_VERSION_OFFSET;
-                    section_prot = GAME_INFO_4_55_SECTION_PROT;
-                    break;
-				case 505:
-                    process_name = GAME_INFO_5_05_PROCESS_NAME;
-                    section_name = GAME_INFO_5_05_SECTION_NAME;
-                    id_offset = GAME_INFO_5_05_ID_OFFSET;
-                    version_offset = GAME_INFO_5_05_VERSION_OFFSET;
-                    section_prot = GAME_INFO_5_05_SECTION_PROT;
-                    break;
-                default:
-                    break;
+                gameInfo = gameInfos[Util.Version];
             }
+
+            string process_name = (string)gameInfo["process_name"];
+            string section_name = (string)gameInfo["section_name"];
+
+            ulong id_offset = Convert.ToUInt64(gameInfo["id_offset"]);
+            ulong version_offset = Convert.ToUInt64(gameInfo["version_offset"]);
+            int section_prot = Convert.ToInt32(gameInfo["section_prot"]);
 
             try
             {
@@ -103,7 +85,7 @@ namespace PS4_Cheater
 
         public const uint MAJOR_VERSION = 1;
         public const uint SECONDARY_VERSION = 4;
-        public const uint THIRD_VERSION = 5;
+        public const uint THIRD_VERSION = 8;
 
         public const string EXACT_VALUE = "Exact Value";
         public const string FUZZY_VALUE = "Fuzzy Value";

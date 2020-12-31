@@ -19,6 +19,13 @@
         private ProcessManager processManager = new ProcessManager();
         private MemoryHelper memoryHelper = new MemoryHelper(true, 0);
         private CheatList cheatList = new CheatList();
+        private readonly Dictionary<string, int> versions = new Dictionary<string, int>()
+        {
+            ["6.72"] = 672,
+            ["5.05"] = 505,
+            ["4.55"] = 455,
+            ["4.05"] = 405
+        };
 
         private const int CHEAT_LIST_DEL = 0;
         private const int CHEAT_LIST_ADDRESS = 1;
@@ -33,12 +40,6 @@
         private const int RESULT_LIST_TYPE = 1;
         private const int RESULT_LIST_VALUE = 2;
         private const int RESULT_LIST_SECTION = 4;
-
-        private const int VERSION_LIST_405 = 2;
-        private const int VERSION_LIST_455 = 1;
-        private const int VERSION_LIST_505 = 0;
-
-        private const int VERSION_LIST_DEFAULT = VERSION_LIST_505;
 
         private string[] SEARCH_BY_FLOAT_FIRST = new string[]
         {
@@ -100,31 +101,23 @@
 
         private void main_Load(object sender, EventArgs e)
         {
+            foreach (KeyValuePair<string, int> ver in versions)
+            {
+                this.version_list.Items.Add(ver.Key);
+            };
             valueTypeList.Items.AddRange(CONSTANT.SEARCH_VALUE_TYPE);
             valueTypeList.SelectedIndex = 2;
 
             string version = Config.getSetting("ps4 version");
             string ip = Config.getSetting("ip");
-			if (version == "5.05")
+            var defaultVer = versions.First();
+            if (!string.IsNullOrWhiteSpace(version))
             {
-                version_list.SelectedIndex = VERSION_LIST_505;
-                Util.Version = 505;
+                defaultVer = versions.SingleOrDefault(v => v.Key == version);
             }
-            else if (version == "4.05")
-            {
-                version_list.SelectedIndex = VERSION_LIST_405;
-                Util.Version = 405;
-            }
-            else if (version == "4.55")
-            {
-                Util.Version = 455;
-                version_list.SelectedIndex = VERSION_LIST_455;
-            }
-            else
-            {
-                Util.Version = 505;
-                version_list.SelectedIndex = VERSION_LIST_DEFAULT;
-            }
+
+            version_list.SelectedIndex = version_list.Items.IndexOf(defaultVer.Key);
+            Util.Version = defaultVer.Value;
 
             if (!string.IsNullOrEmpty(ip))
             {
@@ -141,21 +134,7 @@
         {
 
             string ip = Config.getSetting("ip");
-            string version = "";
-            switch (version_list.SelectedIndex)
-            {
-                case VERSION_LIST_405:
-                    version = "4.05";
-                    break;
-                case VERSION_LIST_455:
-                    version = "4.55";
-                    break;
-				case VERSION_LIST_505:
-                    version = "5.05";
-                    break;
-                default:
-                    break;
-            }
+            string version = (string)version_list.SelectedItem;
 
             if (!string.IsNullOrWhiteSpace(version))
             {
@@ -898,7 +877,7 @@
             try
             {
 				
-                MemoryHelper.Connect(ip_box.Text,(Util.Version == 505));
+                MemoryHelper.Connect(ip_box.Text);
 
                 this.processes_comboBox.Items.Clear();
                 ProcessList pl = MemoryHelper.GetProcessList();
@@ -927,27 +906,24 @@
         {
             try
             {
-                string patch_path = Application.StartupPath;
-                switch (version_list.SelectedIndex)
+                if (this.version_list.SelectedItem == null)
                 {
-                    case VERSION_LIST_405:
-                        patch_path += @"\4.05\";
-                        break;
-                    case VERSION_LIST_455:
-                        patch_path += @"\4.55\";
-                        break;
-					case VERSION_LIST_505:
-                        patch_path += @"\5.05\";
-                        break;
-                    default:
-                        throw new System.ArgumentException("Unknown version.");
+                    throw new System.ArgumentException("Unknown version.");
                 }
-
-                this.send_pay_load(this.ip_box.Text, patch_path + @"payload.bin", Convert.ToInt32(this.port_box.Text));
+                string patchPath = string.Format(@"{0}\{1}\", Application.StartupPath, this.version_list.SelectedItem);
+                if (!File.Exists(patchPath + @"payload.bin"))
+                {
+                    throw new ArgumentException(string.Format("payload.bin({0}) not found!", patchPath));
+                }
+                this.send_pay_load(this.ip_box.Text, patchPath + @"payload.bin", Convert.ToInt32(this.port_box.Text));
                 Thread.Sleep(1000);
-                this.msg.Text = "Injecting kpayload.elf...";
-                this.send_pay_load(this.ip_box.Text, patch_path + @"kpayload.elf", 9023);
-                Thread.Sleep(2500);
+
+                if (File.Exists(patchPath + @"kpayload.bin"))
+                {
+                    this.msg.Text = "Injecting kpayload.elf...";
+                    this.send_pay_load(this.ip_box.Text, patchPath + @"kpayload.elf", 9023);
+                    Thread.Sleep(2500);
+                }
                 this.msg.ForeColor = Color.Green;
                 this.msg.Text = "Payload injected successfully!";
             }
@@ -1049,14 +1025,14 @@
                 value_1_box.Visible = true;
                 value_label.Visible = true;
                 and_label.Visible = true;
-                value_box.Width = 102;
+                value_box.Width = 115;
             }
             else
             {
                 value_1_box.Visible = false;
                 value_label.Visible = false;
                 and_label.Visible = false;
-                value_box.Width = 235;
+                value_box.Width = 261;
             }
         }
 
@@ -1206,20 +1182,9 @@
 
         private void version_list_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch (version_list.SelectedIndex)
+            if (!string.IsNullOrWhiteSpace((string)version_list.SelectedItem))
             {
-                case VERSION_LIST_405:
-                    Util.Version = 405;
-					
-                    break;
-                case VERSION_LIST_455:
-                    Util.Version = 455;
-					
-                    break;
-				case VERSION_LIST_505:
-                    Util.Version = 505;
-					
-                    break;
+                Util.Version = versions[(string)version_list.SelectedItem];
             }
         }
     }

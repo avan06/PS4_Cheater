@@ -116,7 +116,7 @@ namespace PS4_Cheater
             count++;
         }
 
-        public void Clear()
+            public void Clear()
         {
             count = 0;
             buffer_tag_offset = 0;
@@ -192,25 +192,29 @@ namespace PS4_Cheater
         public string Name { get; set; }
         public bool Check { set; get; }
         public uint Prot { get; set; }
-
+        public ulong Offset { get; set; }
         public ResultList ResultList { get; set; }
-        
+        public List<ResultList> ResultLists { get; set; }
+
 
         public MappedSection()
         {
             ResultList = null;
+            ResultLists = null;
         }
 
         public void UpdateResultList(ProcessManager processManager, MemoryHelper memoryHelper,
-            string default_value_0_str, string default_value_1_str, bool is_hex, bool newScan)
+            string default_value_0_str, string default_value_1_str, bool is_hex, bool isGroup, bool newScan)
         {
             if (!Check)
             {
                 ResultList = null;
+                ResultLists = null;
                 return;
             }
 
             ResultList new_result_list = new ResultList(memoryHelper.Length, memoryHelper.Alignment);
+            List<ResultList> nowResults = ResultLists != null && ResultLists.Count > 0 ? ResultLists : new List<ResultList>(); //For GroupScan
 
             ulong address = this.Start;
             uint base_address = 0;
@@ -260,7 +264,11 @@ namespace PS4_Cheater
                     }
                 }
 
-                if (newScan)
+                if (isGroup)
+                {
+                    memoryHelper.CompareWithMemoryBufferGroupScanner(default_value_0_str, buffer, ref nowResults, base_address, newScan);
+                }
+                else if (newScan)
                 {
                     memoryHelper.CompareWithMemoryBufferNewScanner(default_value_0, default_value_1, buffer, new_result_list, base_address);
                 }
@@ -272,7 +280,13 @@ namespace PS4_Cheater
                 address += (ulong)cur_length;
                 base_address += (uint)cur_length;
             }
-            ResultList = new_result_list;
+            if (isGroup)
+            {
+                ResultLists = nowResults;
+            } else
+            {
+                ResultList = new_result_list;
+            }
         }
 
         public void PointerSearchInit(ProcessManager processManager, MemoryHelper memoryHelper, PointerList pointerList)
@@ -404,7 +418,7 @@ namespace PS4_Cheater
             MappedSection sectionInfo = mapped_section_list[section_idx];
 
             StringBuilder section_name = new StringBuilder();
-            section_name.Append(String.Format("{0:X}", sectionInfo.Start) + "-");
+            section_name.Append(String.Format("{0:X9}", sectionInfo.Start) + "-");
             section_name.Append(sectionInfo.Name + "-");
             section_name.Append(String.Format("{0:X}", sectionInfo.Prot) + "-");
             section_name.Append((sectionInfo.Length / 1024).ToString() + "KB");
@@ -425,7 +439,8 @@ namespace PS4_Cheater
             }
             return result_list;
         }
-        private bool IsSonyTrash(string name) => name.StartsWith("libSce") || name.StartsWith("libc.prx") || (name.StartsWith("SceShell") || name.StartsWith("SceLib")) || (name.StartsWith("SceNp") || name.StartsWith("SceVoice") || (name.StartsWith("SceFios") || name.StartsWith("libkernel"))) || name.StartsWith("SceVdec");
+
+        private bool IsSonyTrash(string name) => (!name.Equals("libSceCdlgUtilServer.sprx") && name.StartsWith("libSce")) || name.StartsWith("libc.prx") || (name.StartsWith("SceShell") || name.StartsWith("SceLib")) || (name.StartsWith("SceNp") || name.StartsWith("SceVoice") || (name.StartsWith("SceFios") || name.StartsWith("libkernel"))) || name.StartsWith("SceVdec");
 
         public void InitMemorySectionList(ProcessInfo pi, bool isTrashFilter)
         {
@@ -479,6 +494,7 @@ namespace PS4_Cheater
                         }
                         mappedSection.Check = false;
                         mappedSection.Prot = entry.prot;
+                        mappedSection.Offset = entry.offset;
 
                         mapped_section_list.Add(mappedSection);
 
@@ -495,9 +511,24 @@ namespace PS4_Cheater
             ulong total_result_count = 0;
             for (int idx = 0; idx < mapped_section_list.Count; ++idx)
             {
-                if (mapped_section_list[idx].Check && mapped_section_list[idx].ResultList != null)
+                if (mapped_section_list[idx].Check)
                 {
-                    total_result_count += (ulong)mapped_section_list[idx].ResultList.Count;
+                    List<ResultList> resultLists = null;
+                    if (mapped_section_list[idx].ResultLists != null && mapped_section_list[idx].ResultLists.Count > 0)
+                    {
+                        resultLists = mapped_section_list[idx].ResultLists;
+                    }
+                    else if (mapped_section_list[idx].ResultList != null)
+                    {
+                        resultLists = new List<ResultList>() { mapped_section_list[idx].ResultList };
+                    }
+                    if (resultLists != null)
+                    {
+                        foreach (ResultList resultList in resultLists)
+                        {
+                            total_result_count += (ulong)resultList.Count;
+                        }
+                    }
                 }
             }
             return total_result_count;
@@ -510,6 +541,10 @@ namespace PS4_Cheater
                 if (mapped_section_list[idx].ResultList != null)
                 {
                     mapped_section_list[idx].ResultList.Clear();
+                }
+                if (mapped_section_list[idx].ResultLists != null)
+                {
+                    mapped_section_list[idx].ResultLists.Clear();
                 }
             }
         }

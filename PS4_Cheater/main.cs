@@ -172,48 +172,75 @@
             for (int idx = 0; idx < processManager.MappedSectionList.Count; ++idx)
             {
                 MappedSection mapped_section = processManager.MappedSectionList[idx];
-                ResultList result_list = mapped_section.ResultList;
-                if (result_list == null)
-                {
-                    continue;
-                }
                 if (!mapped_section.Check)
                 {
                     continue;
                 }
-
-                mappedSectionCheckeSet[idx] = result_list.Count > 0;
-
-                for (result_list.Begin(); !result_list.End(); result_list.Next())
+                List<ResultList> resultLists = memoryHelper.ValueType == ValueType.GROUP_TYPE ? mapped_section.ResultLists : new List<ResultList>() { mapped_section.ResultList };
+                if (resultLists == null || resultLists.Count == 0)
                 {
-                    if (curResultCount >= MAX_RESULTS_NUM)
+                    continue;
+                }
+
+                for (int rIdx = 0; rIdx < resultLists.Count; rIdx++)
+                {
+                    ResultList result_list = resultLists[rIdx];
+                    mappedSectionCheckeSet[idx] = result_list.Count > 0;
+
+                    for (result_list.Begin(); !result_list.End(); result_list.Next())
                     {
-                        break;
+                        if (curResultCount >= MAX_RESULTS_NUM)
+                        {
+                            break;
+                        }
+
+                        uint memory_address_offset = 0;
+                        byte[] memory_value = null;
+
+                        result_list.Get(ref memory_address_offset, ref memory_value);
+
+                        curResultCount++;
+                        ListViewItem lvi = new ListViewItem();
+
+                        lvi.Text = String.Format("{0:X}", memory_address_offset + mapped_section.Start);
+
+                        if (refresh && !worker.CancellationPending)
+                        {
+                            if (memoryHelper.ValueType == ValueType.GROUP_TYPE)
+                            {
+                                List<MemoryHelper.ScanCommand> scanList = memoryHelper.ScanList;
+                                memoryHelper.Length = scanList[rIdx].length;
+                                memoryHelper.Alignment = scanList[rIdx].alignment;
+                            }
+                            memory_value = memoryHelper.GetBytesByType(memory_address_offset + mapped_section.Start);
+                            result_list.Set(memory_value);
+                            worker.ReportProgress(start + (int)(100.0f * curResultCount / MAX_RESULTS_NUM));
+                        }
+
+                        if (memoryHelper.ValueType != ValueType.GROUP_TYPE)
+                        {
+                            lvi.SubItems.Add(value_type);
+                            lvi.SubItems.Add(memoryHelper.BytesToString(memory_value));
+                            lvi.SubItems.Add(memoryHelper.BytesToHexString(memory_value));
+                        }
+                        else
+                        {
+                            List<MemoryHelper.ScanCommand> scanList = memoryHelper.ScanList;
+                            if (rIdx % 2 == 0)
+                            {
+                                lvi.BackColor = Color.Azure;
+                            } else
+                            {
+                                lvi.BackColor = Color.LightSkyBlue;
+                            }
+                            lvi.SubItems.Add(MemoryHelper.GetStringOfValueType(scanList[rIdx].scanType));
+                            lvi.SubItems.Add(scanList[rIdx].bytesToString(memory_value));
+                            lvi.SubItems.Add(scanList[rIdx].bytesToHexString(memory_value));
+                        }
+                        lvi.SubItems.Add(processManager.MappedSectionList.GetSectionName(idx));
+
+                        listViewItems.Add(lvi);
                     }
-
-                    uint memory_address_offset = 0;
-                    byte[] memory_value = null;
-
-                    result_list.Get(ref memory_address_offset, ref memory_value);
-
-                    curResultCount++;
-                    ListViewItem lvi = new ListViewItem();
-
-                    lvi.Text = String.Format("{0:X}", memory_address_offset + mapped_section.Start);
-
-                    if (refresh && !worker.CancellationPending)
-                    {
-                        memory_value = memoryHelper.GetBytesByType(memory_address_offset + mapped_section.Start);
-                        result_list.Set(memory_value);
-                        worker.ReportProgress(start + (int)(100.0f * curResultCount / MAX_RESULTS_NUM));
-                    }
-
-                    lvi.SubItems.Add(value_type);
-                    lvi.SubItems.Add(memoryHelper.BytesToString(memory_value));
-                    lvi.SubItems.Add(memoryHelper.BytesToHexString(memory_value));
-                    lvi.SubItems.Add(processManager.MappedSectionList.GetSectionName(idx));
-
-                    listViewItems.Add(lvi);
                 }
             }
 
@@ -274,6 +301,7 @@
 
                     result_list_view.Items.Clear();
                     processManager.MappedSectionList.ClearResultList();
+                    memoryHelper.ScanList.Clear();
                     InitCompareTypeListOfFirstScan();
                 }
                 else if (new_scan_btn.Text == CONSTANT.STOP)
@@ -415,7 +443,7 @@
             {
                 if (next_scan_worker.CancellationPending) break;
                 MappedSection mappedSection = processManager.MappedSectionList[section_idx];
-                mappedSection.UpdateResultList(processManager, memoryHelper, value_0, value_1, hex_box.Checked, false);
+                mappedSection.UpdateResultList(processManager, memoryHelper, value_0, value_1, hex_box.Checked, memoryHelper.ValueType == ValueType.GROUP_TYPE, false);
                 if (mappedSection.Check) processed_memory_len += mappedSection.Length;
                 next_scan_worker.ReportProgress((int)(((float)processed_memory_len / total_memory_size) * 80));
             }
@@ -436,7 +464,7 @@
             {
                 if (new_scan_worker.CancellationPending) break;
                 MappedSection mappedSection = processManager.MappedSectionList[section_idx];
-                mappedSection.UpdateResultList(processManager, memoryHelper, value_0, value_1, hex_box.Checked, true);
+                mappedSection.UpdateResultList(processManager, memoryHelper, value_0, value_1, hex_box.Checked, memoryHelper.ValueType == ValueType.GROUP_TYPE, true);
                 if (mappedSection.Check) processed_memory_len += mappedSection.Length;
                 new_scan_worker.ReportProgress((int)(((float)processed_memory_len / total_memory_size) * 80));
             }
@@ -960,6 +988,7 @@
                     compareTypeList.Items.AddRange(SEARCH_BY_FLOAT_FIRST);
                     break;
                 case ValueType.HEX_TYPE:
+                case ValueType.GROUP_TYPE:
                 case ValueType.STRING_TYPE:
                     hex_box.Enabled = false;
                     hex_box.Checked = false;
@@ -1000,6 +1029,7 @@
                     compareTypeList.Items.AddRange(SEARCH_BY_FLOAT_NEXT);
                     break;
                 case ValueType.HEX_TYPE:
+                case ValueType.GROUP_TYPE:
                 case ValueType.STRING_TYPE:
                     compareTypeList.Items.AddRange(SEARCH_BY_HEX);
                     break;

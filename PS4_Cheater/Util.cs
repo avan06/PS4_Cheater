@@ -110,6 +110,7 @@ namespace PS4_Cheater
         public const string BYTE_DOUBLE_TYPE = "double";
         public const string BYTE_STRING_TYPE = "string";
         public const string BYTE_HEX_TYPE = "hex";
+        public const string BYTE_GROUP_TYPE = "group";
         public const string BYTE_POINTER = "pointer";
 
         public const string STOP = "Stop";
@@ -128,6 +129,7 @@ namespace PS4_Cheater
              CONSTANT.BYTE_DOUBLE_TYPE,
              CONSTANT.BYTE_STRING_TYPE,
              CONSTANT.BYTE_HEX_TYPE,
+             CONSTANT.BYTE_GROUP_TYPE,
         };
 
         public const int MAX_PEEK_QUEUE = 4;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using librpc;
 using System.Threading;
 using System.Globalization;
@@ -38,6 +39,7 @@ namespace PS4_Cheater
         DOUBLE_TYPE,
         STRING_TYPE,
         HEX_TYPE,
+        GROUP_TYPE,
         POINTER_TYPE,
         NONE_TYPE,
     }
@@ -46,6 +48,51 @@ namespace PS4_Cheater
     {
         public static PS4RPC ps4 = null;
         private static Mutex mutex;
+        public List<ScanCommand> ScanList = new List<ScanCommand>();
+        public class ScanCommand
+        {
+            public readonly ValueType scanType;
+            public readonly string scanVal;
+            public readonly int length;
+            public readonly int alignment;
+            public readonly bool isAny;
+            public readonly ComparatorHandler comparer;
+            public readonly BytesToStringHandler bytesToString;
+            public readonly BytesToStringHandler bytesToHexString;
+            public readonly StringToBytesHandler stringToBytes;
+            public readonly StringToBytesHandler hexStringToBytes;
+            public readonly byte[] scanBytes;
+            public List<uint> scanResult;
+
+            public ScanCommand(ValueType scanType, string scanVal, int length, int alignment, ComparatorHandler comparer, BytesToStringHandler bytesToString, BytesToStringHandler bytesToHexString, StringToBytesHandler stringToBytes, StringToBytesHandler hexStringToBytes)
+            {
+                this.scanType = scanType;
+                this.scanVal = scanVal;
+                this.length = length;
+                this.alignment = alignment;
+                this.comparer = comparer;
+                this.bytesToString = bytesToString;
+                this.bytesToHexString = bytesToHexString;
+                this.stringToBytes = stringToBytes;
+                this.hexStringToBytes = hexStringToBytes;
+                if (scanVal != "*")
+                {
+                    scanBytes = stringToBytes(scanVal);
+                    if (scanType == ValueType.BYTE_TYPE)
+                    {
+                        scanBytes = new byte[] { scanBytes[0] };
+                    }
+                }
+                else
+                {
+                    isAny = true;
+                    scanBytes = new byte[length];
+                }
+                scanResult = new List<uint>();
+            }
+
+            //public byte[] ScanBytes => scanBytes;
+        }
         private int SelfProcessID;
         private int ProcessID {
             get {
@@ -364,6 +411,240 @@ namespace PS4_Cheater
                 {
                     new_result_list.Add((uint)i + base_address, new_value);
                 }
+            }
+        }
+
+        /// <param name="defaultValue">[ValueType1:]ValueNumber1 [,] [ValueType2:]ValueNumber2 [,] [ValueType3:]ValueNumber3...
+        /// The default ValueType is 4 when the ValueType is omitted, which can be filled in 1, 2, 4, 8, F, D, and ignore case.
+        /// The delimiter can be "," or " " (comma or space)
+        /// </param>
+        public void CompareWithMemoryBufferGroupScanner(string defaultValue, byte[] buffer,ref List<ResultList> nowResults, uint base_address, bool newScan)
+        {
+            List<ScanCommand> scanList = new List<ScanCommand>();
+            Dictionary<string, string> cmd = new Dictionary<string, string>();
+            defaultValue = defaultValue.ToUpper().Trim();
+            defaultValue = Regex.Replace(defaultValue, @" *([,:]) *", "$1");
+            defaultValue = Regex.Replace(defaultValue, @" +", " ");
+            int start = 0, tmpAlignment = 0;
+            for (int idx = 0; idx <= defaultValue.Length; ++idx) //Parse input value
+            {
+                if (idx == defaultValue.Length && start < defaultValue.Length)
+                {
+                    cmd["scanVal"] = defaultValue.Substring(start, defaultValue.Length - start);
+                }
+                else if (defaultValue[idx].Equals(':'))
+                {
+                    cmd["typeKey"] = defaultValue.Substring(start, idx - start);
+                    start = idx + 1;
+                }
+                else if (Regex.IsMatch(defaultValue[idx].ToString(), "[, ]"))
+                {
+                    cmd["scanVal"] = defaultValue.Substring(start, idx - start);
+                    start = idx + 1;
+                }
+
+                if (cmd.ContainsKey("scanVal"))
+                {
+                    ScanCommand sCmd;
+                    string typeKey = null;
+                    if (cmd.ContainsKey("typeKey"))
+                    {
+                        typeKey = cmd["typeKey"];
+                    }
+                    switch (typeKey)
+                    {
+                        case "1":
+                            sCmd = new ScanCommand(ValueType.BYTE_TYPE, cmd["scanVal"], 1, 1, scan_type_equal_uint8, uchar_to_string, uchar_to_hex_string, string_to_byte, hex_string_to_byte);
+                            break;
+                        case "2":
+                            sCmd = new ScanCommand(ValueType.USHORT_TYPE, cmd["scanVal"], 2, Alignment > 2 ? 2 : 1, scan_type_equal_uint16, uint16_to_string, uint16_to_hex_string, string_to_2_bytes, hex_string_to_2_bytes);
+                            break;
+                        case "4":
+                            sCmd = new ScanCommand(ValueType.UINT_TYPE, cmd["scanVal"], 4, Alignment, scan_type_equal_uint, uint_to_string, uint_to_hex_string, string_to_4_bytes, hex_string_to_4_bytes);
+                            break;
+                        case "8":
+                            sCmd = new ScanCommand(ValueType.ULONG_TYPE, cmd["scanVal"], 8, Alignment, scan_type_equal_ulong, ulong_to_string, ulong_to_hex_string, string_to_8_bytes, hex_string_to_8_bytes);
+                            break;
+                        case "F":
+                            sCmd = new ScanCommand(ValueType.FLOAT_TYPE, cmd["scanVal"], 4, Alignment, scan_type_equal_float, float_to_string, float_to_hex_string, string_to_float, hex_string_to_float);
+                            break;
+                        case "D":
+                            sCmd = new ScanCommand(ValueType.DOUBLE_TYPE, cmd["scanVal"], 8, Alignment, scan_type_equal_double, double_to_string, double_to_hex_string, string_to_double, hex_string_to_double);
+                            break;
+                        default:
+                            sCmd = new ScanCommand(ValueType.UINT_TYPE, cmd["scanVal"], 4, Alignment, scan_type_equal_uint, uint_to_string, uint_to_hex_string, string_to_4_bytes, string_to_4_bytes);
+                            break;
+                    }
+                    scanList.Add(sCmd);
+                    if (sCmd.alignment > tmpAlignment)
+                    {
+                        tmpAlignment = sCmd.alignment;
+                    }
+                    cmd = new Dictionary<string, string>();
+                }
+            }
+
+            if (scanList.Count == 0)
+            {
+                throw new Exception("Invalid input, No detection input!");
+            }
+            if (!newScan)
+            {
+                if (scanList.Count != ScanList.Count)
+                {
+                    throw new Exception("Invalid input, The number of groups does not match!");
+                }
+                for (int sIdx = 0; sIdx < scanList.Count; sIdx++)
+                {
+                    if (scanList[sIdx].scanType != ScanList[sIdx].scanType)
+                    {
+                        throw new Exception("Invalid input, Scan type does not match!");
+                    }
+                }
+                for (int rIdx = 0; rIdx < nowResults.Count; rIdx++)
+                { //Initialize all results to the starting position
+                    nowResults[rIdx].Begin();
+                }
+            }
+            if (Alignment > tmpAlignment)
+            {
+                Alignment = tmpAlignment;
+            }
+
+            int index = 0;
+            uint addressOffset = 0;
+            List<uint> groupOffsets = new List<uint>();
+            for (int sIdx = 0; sIdx < scanList.Count; sIdx++)
+            {
+                ScanCommand sCmd = scanList[sIdx];
+                if (newScan)
+                {
+                    byte[] new_value = new byte[sCmd.length];
+                    if (sCmd.isAny)
+                    {
+                        if (groupOffsets.Count() > 0)
+                        {
+                            Buffer.BlockCopy(buffer, (int)addressOffset, new_value, 0, sCmd.length);
+                        }
+                        groupOffsets.Add(addressOffset);
+                        addressOffset += (uint)sCmd.length;
+                        continue;
+                    }
+                    for (; addressOffset + sCmd.length < buffer.LongLength; addressOffset += (uint)sCmd.alignment)
+                    {
+                        Buffer.BlockCopy(buffer, (int)addressOffset, new_value, 0, sCmd.length);
+                        if (sCmd.comparer(sCmd.scanBytes, null, null, new_value))
+                        {
+                            groupOffsets.Add(addressOffset);
+                            addressOffset += (uint)sCmd.length;
+                            break;
+                        }
+                        else
+                        {
+                            if (sIdx > 0)
+                            {
+                                sIdx = -1;
+                                groupOffsets.Clear();
+                                if (sCmd.alignment > 1 && Alignment > sCmd.alignment && addressOffset % (uint)Alignment > 0)
+                                {
+                                    addressOffset -= addressOffset % (uint)Alignment;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    groupOffsets.Count();
+                    if (groupOffsets.Count == scanList.Count)
+                    { //Find possible targets
+                        for (int idx = 0; idx < scanList.Count; idx++)
+                        {
+                            ScanCommand sc = scanList[idx];
+                            sc.scanResult.Add(groupOffsets[idx]);
+                        }
+                        index++;
+                        sIdx = -1;
+                        groupOffsets.Clear();
+                        if (sCmd.alignment > 1 && Alignment > sCmd.alignment && addressOffset % (uint)Alignment > 0)
+                        {
+                            addressOffset -= addressOffset % (uint)Alignment;
+                        }
+                    }
+                    if (addressOffset + sCmd.length >= buffer.LongLength)
+                    {
+                        break;
+                    }
+                }
+                else
+                {
+                    uint memoryAddressOffset = 0;
+                    byte[] memoryValue = null;
+                    if (sIdx== 0 || groupOffsets.Count > 0)
+                    {
+                        nowResults[sIdx].Get(ref memoryAddressOffset, ref memoryValue);
+                        Buffer.BlockCopy(buffer, (int)memoryAddressOffset, memoryValue, 0, sCmd.length);
+                        if (sCmd.isAny || sCmd.comparer(sCmd.scanBytes, null, null, memoryValue))
+                        {
+                            groupOffsets.Add(memoryAddressOffset);
+                        }
+                        else
+                        {
+                            groupOffsets.Clear();
+                        }
+                    }
+                    nowResults[sIdx].Next();
+
+                    if (groupOffsets.Count == scanList.Count)
+                    { //Find possible targets
+                        for (int idx = 0; idx < scanList.Count; idx++)
+                        {
+                            ScanCommand sc = scanList[idx];
+                            sc.scanResult.Add(groupOffsets[idx]);
+                        }
+                        index++;
+                        groupOffsets.Clear();
+                    }
+                    if (sIdx == scanList.Count -1 && !nowResults[sIdx].End())
+                    {
+                        sIdx = -1;
+                    }
+                }
+            }
+
+            ResultList newResultList = null;
+            if (scanList.Count > 0 && scanList[0].scanResult.Count > 0)
+            {
+                for (int sIdx = 0; sIdx < scanList.Count; sIdx++)
+                {
+                    if (!newScan)
+                    {
+                        nowResults[sIdx].Clear();
+                    }
+                    if (nowResults.Count < scanList.Count)
+                    {
+                        newResultList = new ResultList(scanList[sIdx].length, scanList[sIdx].alignment);
+                    } else if (nowResults.Count == scanList.Count)
+                    {
+                        newResultList = nowResults[sIdx];
+                    }
+                    for (int rIdx = 0; rIdx < scanList[0].scanResult.Count; rIdx++)
+                    {
+                        uint result = (uint)scanList[sIdx].scanResult[rIdx];
+                        if (newScan)
+                        {
+                            result += base_address;
+                        }
+                        byte[] memoryValue = scanList[sIdx].scanBytes;
+                        newResultList.Add(result, memoryValue);
+                    }
+                    if (nowResults.Count < scanList.Count)
+                    {
+                        nowResults.Add(newResultList);
+                    } else if (nowResults.Count == scanList.Count)
+                    {
+                        nowResults[sIdx] = newResultList;
+                    }
+                }
+                ScanList = scanList;
             }
         }
 
@@ -796,6 +1077,9 @@ namespace PS4_Cheater
                 case CONSTANT.BYTE_HEX_TYPE:
                     _valueType = ValueType.HEX_TYPE;
                     break;
+                case CONSTANT.BYTE_GROUP_TYPE:
+                    _valueType = ValueType.GROUP_TYPE;
+                    break;
                 case CONSTANT.BYTE_STRING_TYPE:
                     _valueType = ValueType.STRING_TYPE;
                     break;
@@ -826,6 +1110,8 @@ namespace PS4_Cheater
                     return CONSTANT.BYTE_FLOAT_TYPE;
                 case ValueType.HEX_TYPE:
                     return CONSTANT.BYTE_HEX_TYPE;
+                case ValueType.GROUP_TYPE:
+                    return CONSTANT.BYTE_GROUP_TYPE;
                 case ValueType.STRING_TYPE:
                     return CONSTANT.BYTE_STRING_TYPE;
                 case ValueType.POINTER_TYPE:
@@ -961,6 +1247,10 @@ namespace PS4_Cheater
                     Alignment = 1;
                     Length = type_length / 2;
                     break;
+                case ValueType.GROUP_TYPE:
+                    StringToBytes = string_to_string_bytes;
+                    Alignment = (is_alignment) ? 4 : 1;
+                    break;
                 case ValueType.STRING_TYPE:
                     BytesToString = string_to_string;
                     BytesToHexString = string_to_hex_string;
@@ -1040,6 +1330,8 @@ namespace PS4_Cheater
                             break;
                         case ValueType.HEX_TYPE:
                             Comparer = scan_type_equal_hex;
+                            break;
+                        case ValueType.GROUP_TYPE:
                             break;
                         case ValueType.STRING_TYPE:
                             Comparer = scan_type_equal_string;

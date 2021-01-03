@@ -189,10 +189,10 @@ namespace PS4_Cheater
                 }
                 tmpBList.Add(hexBox.ByteProvider.ReadByte(hexBox.SelectionStart + idx));
             }
-            info_box.Text = string.Format(@"1: {0:X}={0}
-2: {1:X}={1}
-4: {2:X}={2}
-8: {3:X}={3}
+            info_box.Text = string.Format(@"1: {0:X8}={0}
+2: {1:X8}={1}
+4: {2:X8}={2}
+8: {3:X8}={3}
 F: {4}
 D: {4}", info1, info2, info4, info8, infoF, infoD);
         }

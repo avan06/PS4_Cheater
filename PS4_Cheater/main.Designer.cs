@@ -266,6 +266,7 @@ namespace PS4_Cheater
             this.cheat_list_view_lock,
             this.cheat_list_view_description});
             this.cheat_list_view.ContextMenuStrip = this.cheat_list_menu;
+            this.cheat_list_view.ImeMode = System.Windows.Forms.ImeMode.Off;
             this.cheat_list_view.Location = new System.Drawing.Point(0, 36);
             this.cheat_list_view.Name = "cheat_list_view";
             this.cheat_list_view.RowHeadersVisible = false;
@@ -454,6 +455,7 @@ namespace PS4_Cheater
             this.value_box.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
             this.value_box.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.value_box.ForeColor = System.Drawing.Color.White;
+            this.value_box.ImeMode = System.Windows.Forms.ImeMode.Off;
             this.value_box.Location = new System.Drawing.Point(40, 307);
             this.value_box.MaxLength = 500;
             this.value_box.Name = "value_box";
@@ -773,6 +775,7 @@ namespace PS4_Cheater
             this.value_1_box.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(37)))), ((int)(((byte)(37)))), ((int)(((byte)(38)))));
             this.value_1_box.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.value_1_box.ForeColor = System.Drawing.Color.White;
+            this.value_1_box.ImeMode = System.Windows.Forms.ImeMode.Off;
             this.value_1_box.Location = new System.Drawing.Point(186, 307);
             this.value_1_box.MaxLength = 31;
             this.value_1_box.Name = "value_1_box";

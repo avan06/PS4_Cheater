@@ -203,6 +203,11 @@ namespace PS4_Cheater
             ResultLists = null;
         }
 
+        public override string ToString()
+        {
+            return "Start: " + Start.ToString("X") + ", Length: " + Length + ", Name: " + Name + ", Check: " + Check + ", Prot: " + Prot + ", Offset: " + Offset.ToString("X");
+        }
+
         public void UpdateResultList(ProcessManager processManager, MemoryHelper memoryHelper,
             string default_value_0_str, string default_value_1_str, bool is_hex, bool isGroup, bool newScan)
         {
@@ -317,6 +322,8 @@ namespace PS4_Cheater
                 address += (ulong)cur_length;
             }
         }
+        public bool IsSonyTrash(string name) => (!name.Equals("libSceCdlgUtilServer.sprx") && name.StartsWith("libSce")) || name.StartsWith("libc.prx") || (name.StartsWith("SceShell") || name.StartsWith("SceLib")) || (name.StartsWith("SceNp") || name.StartsWith("SceVoice") || (name.StartsWith("SceFios") || name.StartsWith("libkernel"))) || name.StartsWith("SceVdec");
+
     }
 
     public class MappedSectionList

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.status_strip = new System.Windows.Forms.StatusStrip();
             this.progress_bar = new System.Windows.Forms.ToolStripProgressBar();
             this.msg = new System.Windows.Forms.ToolStripStatusLabel();
@@ -36,12 +37,16 @@
             this.level_updown = new System.Windows.Forms.DomainUpDown();
             this.pointer_finder_worker = new System.ComponentModel.BackgroundWorker();
             this.pointer_list_view = new System.Windows.Forms.DataGridView();
+            this.pointer_list_menu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.pointer_list_view_add_to_cheat_list = new System.Windows.Forms.ToolStripMenuItem();
             this.next_btn = new System.Windows.Forms.Button();
             this.next_pointer_finder_worker = new System.ComponentModel.BackgroundWorker();
             this.label1 = new System.Windows.Forms.Label();
             this.fast_scan_box = new System.Windows.Forms.CheckBox();
+            this.trashFilter_box = new System.Windows.Forms.CheckBox();
             this.status_strip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pointer_list_view)).BeginInit();
+            this.pointer_list_menu.SuspendLayout();
             this.SuspendLayout();
             // 
             // status_strip
@@ -63,13 +68,15 @@
             // msg
             // 
             this.msg.Name = "msg";
-            this.msg.Size = new System.Drawing.Size(0, 17);
+            this.msg.Size = new System.Drawing.Size(234, 17);
+            this.msg.Spring = true;
+            this.msg.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // address_box
             // 
             this.address_box.Location = new System.Drawing.Point(202, 10);
             this.address_box.Name = "address_box";
-            this.address_box.Size = new System.Drawing.Size(133, 21);
+            this.address_box.Size = new System.Drawing.Size(133, 22);
             this.address_box.TabIndex = 3;
             // 
             // find_btn
@@ -87,7 +94,7 @@
             this.level_updown.Location = new System.Drawing.Point(11, 11);
             this.level_updown.Name = "level_updown";
             this.level_updown.ReadOnly = true;
-            this.level_updown.Size = new System.Drawing.Size(120, 21);
+            this.level_updown.Size = new System.Drawing.Size(120, 22);
             this.level_updown.TabIndex = 6;
             // 
             // pointer_finder_worker
@@ -107,6 +114,7 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.pointer_list_view.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.pointer_list_view.ContextMenuStrip = this.pointer_list_menu;
             this.pointer_list_view.Location = new System.Drawing.Point(0, 37);
             this.pointer_list_view.Name = "pointer_list_view";
             this.pointer_list_view.ReadOnly = true;
@@ -116,8 +124,23 @@
             this.pointer_list_view.TabIndex = 7;
             this.pointer_list_view.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.pointer_list_view_CellDoubleClick);
             // 
+            // pointer_list_menu
+            // 
+            this.pointer_list_menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.pointer_list_view_add_to_cheat_list});
+            this.pointer_list_menu.Name = "pointer_list_menu";
+            this.pointer_list_menu.Size = new System.Drawing.Size(181, 48);
+            // 
+            // pointer_list_view_add_to_cheat_list
+            // 
+            this.pointer_list_view_add_to_cheat_list.Name = "pointer_list_view_add_to_cheat_list";
+            this.pointer_list_view_add_to_cheat_list.Size = new System.Drawing.Size(180, 22);
+            this.pointer_list_view_add_to_cheat_list.Text = "Add to Cheat List";
+            this.pointer_list_view_add_to_cheat_list.Click += new System.EventHandler(this.pointer_list_view_add_to_cheat_list_Click);
+            // 
             // next_btn
             // 
+            this.next_btn.Enabled = false;
             this.next_btn.Location = new System.Drawing.Point(471, 8);
             this.next_btn.Name = "next_btn";
             this.next_btn.Size = new System.Drawing.Size(96, 23);
@@ -139,7 +162,7 @@
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(143, 19);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(53, 12);
+            this.label1.Size = new System.Drawing.Size(45, 12);
             this.label1.TabIndex = 9;
             this.label1.Text = "Address:";
             // 
@@ -150,17 +173,28 @@
             this.fast_scan_box.CheckState = System.Windows.Forms.CheckState.Checked;
             this.fast_scan_box.Location = new System.Drawing.Point(706, 12);
             this.fast_scan_box.Name = "fast_scan_box";
-            this.fast_scan_box.Size = new System.Drawing.Size(72, 16);
+            this.fast_scan_box.Size = new System.Drawing.Size(64, 16);
             this.fast_scan_box.TabIndex = 10;
             this.fast_scan_box.Text = "FastScan";
             this.fast_scan_box.UseVisualStyleBackColor = true;
             this.fast_scan_box.CheckedChanged += new System.EventHandler(this.fast_scan_box_CheckedChanged);
+            // 
+            // trashFilter_box
+            // 
+            this.trashFilter_box.AutoSize = true;
+            this.trashFilter_box.Location = new System.Drawing.Point(777, 12);
+            this.trashFilter_box.Name = "trashFilter_box";
+            this.trashFilter_box.Size = new System.Drawing.Size(48, 16);
+            this.trashFilter_box.TabIndex = 11;
+            this.trashFilter_box.Text = "Filter";
+            this.trashFilter_box.UseVisualStyleBackColor = true;
             // 
             // PointerFinder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(851, 421);
+            this.Controls.Add(this.trashFilter_box);
             this.Controls.Add(this.fast_scan_box);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.next_btn);
@@ -175,6 +209,7 @@
             this.status_strip.ResumeLayout(false);
             this.status_strip.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pointer_list_view)).EndInit();
+            this.pointer_list_menu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -193,5 +228,8 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ToolStripStatusLabel msg;
         private System.Windows.Forms.CheckBox fast_scan_box;
+        private System.Windows.Forms.CheckBox trashFilter_box;
+        private System.Windows.Forms.ContextMenuStrip pointer_list_menu;
+        private System.Windows.Forms.ToolStripMenuItem pointer_list_view_add_to_cheat_list;
     }
 }

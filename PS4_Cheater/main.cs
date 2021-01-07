@@ -1255,6 +1255,45 @@
             processes_comboBox.SelectedIndex = 0;
             processes_comboBox.SelectedIndex = idx;
         }
+
+        private void cheat_list_item_edit_Click(object sender, EventArgs e)
+        {
+            if (cheat_list_view.SelectedRows == null)
+                return;
+            if (cheat_list_view.SelectedRows.Count != 1)
+                return;
+
+            DataGridViewRow item = cheat_list_view.SelectedRows[0];
+
+            ulong address = ulong.Parse((string)item.Cells[CHEAT_LIST_ADDRESS].Value, NumberStyles.HexNumber);
+            int sectionID = processManager.MappedSectionList.GetMappedSectionID(address);
+            if (sectionID < 0)
+            {
+                MessageBox.Show("Invalid Address!!");
+                return;
+            }
+
+            NewAddress newAddress = new NewAddress(processManager, address,
+                (string)item.Cells[CHEAT_LIST_VALUE].Value,
+                (string)item.Cells[CHEAT_LIST_TYPE].Value,
+                (string)item.Cells[CHEAT_LIST_DESC].Value,
+                (bool)item.Cells[CHEAT_LIST_LOCK].Value,
+                false, null, true);
+            if (newAddress.ShowDialog() != DialogResult.OK)
+                return;
+
+            ValueType valueType = MemoryHelper.GetValueTypeByString(newAddress.ValueTypeStr);
+            DataCheatOperator dataCheatOperator = new DataCheatOperator(newAddress.Value, valueType, processManager);
+            AddressCheatOperator addressCheatOperator = new AddressCheatOperator(newAddress.Address, processManager);
+            DataCheat dataCheat = new DataCheat(dataCheatOperator, addressCheatOperator, newAddress.Lock, newAddress.Descriptioin, processManager);
+            addressCheatOperator.SetRuntime(dataCheatOperator);
+            cheatList[item.Index] = dataCheat;
+
+            item.Cells[CHEAT_LIST_VALUE].Value = dataCheatOperator.Display();
+            item.Cells[CHEAT_LIST_TYPE].Value = MemoryHelper.GetStringOfValueType(dataCheatOperator.ValueType);
+            item.Cells[CHEAT_LIST_DESC].Value = newAddress.Descriptioin;
+            item.Cells[CHEAT_LIST_LOCK].Value = newAddress.Lock;
+        }
     }
 }
 

@@ -29,6 +29,32 @@ namespace PS4_Cheater
             this.ProcessManager = ProcessManager;
         }
 
+        public NewAddress(ProcessManager processManager, ulong address, string value, string valueTypeStr, string descriptioin, bool _lock, bool pointer, List<long> offsetList, bool isEdit) : this(processManager)
+        {
+            Address = address;
+            Value = value;
+            ValueTypeStr = valueTypeStr;
+            Descriptioin = descriptioin;
+            Lock = _lock;
+            Pointer = pointer;
+            OffsetList = offsetList;
+
+            address_box.Text = address.ToString("X");
+            type_box.SelectedIndex = type_box.FindStringExact(valueTypeStr);
+            value_box.Text = value;
+            description_box.Text = descriptioin;
+            lock_box.Checked = _lock;
+            pointer_box.Checked = pointer;
+            if (isEdit)
+            {
+                address_box.ReadOnly = true;
+                if (!pointer)
+                {
+                    pointer_box.Enabled = false;
+                }
+            }
+        }
+
         public ulong Address { get; set; }
         public string Value { get; set; }
         public string ValueTypeStr { get; set; }
@@ -75,7 +101,14 @@ namespace PS4_Cheater
         private void NewAddress_Load(object sender, EventArgs e)
         {
             type_box.Items.AddRange(CONSTANT.SEARCH_VALUE_TYPE);
-            type_box.SelectedIndex = 2;
+            type_box.Items.Remove(CONSTANT.BYTE_GROUP_TYPE);
+            if (!string.IsNullOrWhiteSpace(ValueTypeStr))
+            {
+                type_box.SelectedIndex = type_box.FindStringExact(ValueTypeStr);
+            } else
+            {
+                type_box.SelectedIndex = 2;
+            }
         }
 
         private void pointer_box_CheckedChanged(object sender, EventArgs e)

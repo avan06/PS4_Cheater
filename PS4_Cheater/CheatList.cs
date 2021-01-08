@@ -438,6 +438,25 @@ namespace PS4_Cheater
             }
             return dump_buf;
         }
+
+        public ulong getBaseAddress()
+        {
+            return Address.Address;
+        }
+
+        public List<long> getOffsets()
+        {
+            if (Offsets == null || Offsets.Count == 0)
+            {
+                return null;
+            }
+            List<long> offsets = new List<long>();
+            foreach (OffsetCheatOperator oOperator in Offsets)
+            {
+                offsets.Add(oOperator.Offset);
+            }
+            return offsets;
+        }
     }
 
     public enum ArithmeticType
@@ -676,7 +695,7 @@ namespace PS4_Cheater
         public SimplePointerCheat(CheatOperator source, CheatOperator dest, bool lock_, string description, ProcessManager processManager)
             : base(processManager)
         {
-            CheatType = CheatType.DATA_TYPE;
+            CheatType = CheatType.SIMPLE_POINTER_TYPE;
             AllowLock = true;
             Source = source;
             Destination = dest;
@@ -855,40 +874,25 @@ namespace PS4_Cheater
                 }
             }
 
+            string resultMsg = "";
             for (int i = 1; i < cheats.Length; ++i)
             {
                 string cheat_tuple = cheats[i];
-                string[] cheat_elements = cheat_tuple.Split(new string[] { "|" }, StringSplitOptions.None);
-
-                if (cheat_elements.Length == 0)
+                Cheat cheat = null;
+                if (ParseCheatTuple(cheat_tuple, processManager, ref cheat) && cheat != null)
                 {
-                    continue;
-                }
-
-                if (cheat_elements[CHEAT_CODE_TYPE] == "data")
-                {
-                    DataCheat cheat = new DataCheat(processManager);
-                    if (!cheat.Parse(cheat_elements))
-                    {
-                        MessageBox.Show("Invaid cheat code:" + cheat_tuple);
-                        continue;
-                    }
-
-                    cheat_list.Add(cheat);
-                }
-                else if (cheat_elements[CHEAT_CODE_TYPE] == "simple pointer")
-                {
-
-                    SimplePointerCheat cheat = new SimplePointerCheat(processManager);
-                    if (!cheat.Parse(cheat_elements))
-                        continue;
                     cheat_list.Add(cheat);
                 }
                 else
                 {
-                    MessageBox.Show("Invaid cheat code:" + cheat_tuple);
+                    resultMsg += cheat_tuple + "\n";
                     continue;
                 }
+            }
+            if (resultMsg != "")
+            {
+
+                MessageBox.Show("Invaid cheat code:\n" + resultMsg);
             }
             return true;
         }
@@ -932,5 +936,31 @@ namespace PS4_Cheater
         }
 
         public int Count { get { return cheat_list.Count; } }
+
+        public bool ParseCheatTuple(string cheatTuple, ProcessManager processManager, ref Cheat cheat)
+        {
+            string[] cheatElements = cheatTuple.Split(new string[] { "|" }, StringSplitOptions.None);
+
+            if (cheatElements.Length == 0)
+            {
+                return false;
+            }
+
+            if (cheatElements[CHEAT_CODE_TYPE] == "data")
+            {
+                cheat = new DataCheat(processManager);
+            }
+            else if (cheatElements[CHEAT_CODE_TYPE] == "simple pointer")
+            {
+                cheat = new SimplePointerCheat(processManager);
+            }
+            else
+            {
+                return false;
+            }
+            if (!cheat.Parse(cheatElements)) return false;
+
+            return true;
+        }
     }
 }

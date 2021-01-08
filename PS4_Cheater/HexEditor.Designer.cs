@@ -40,6 +40,7 @@
             this.commit_btn = new System.Windows.Forms.Button();
             this.next_btn = new System.Windows.Forms.Button();
             this.page_list = new System.Windows.Forms.ComboBox();
+            this.add_to_cheat_list_btn = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -58,6 +59,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.add_to_cheat_list_btn);
             this.splitContainer1.Panel2.Controls.Add(this.info_box);
             this.splitContainer1.Panel2.Controls.Add(this.input_box);
             this.splitContainer1.Panel2.Controls.Add(this.find);
@@ -99,7 +101,7 @@
             // 
             // input_box
             // 
-            this.input_box.Location = new System.Drawing.Point(15, 281);
+            this.input_box.Location = new System.Drawing.Point(15, 290);
             this.input_box.Name = "input_box";
             this.input_box.Size = new System.Drawing.Size(160, 22);
             this.input_box.TabIndex = 18;
@@ -118,7 +120,7 @@
             // 
             this.refresh_btn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.refresh_btn.Location = new System.Drawing.Point(15, 154);
+            this.refresh_btn.Location = new System.Drawing.Point(15, 152);
             this.refresh_btn.Name = "refresh_btn";
             this.refresh_btn.Size = new System.Drawing.Size(160, 25);
             this.refresh_btn.TabIndex = 16;
@@ -142,7 +144,7 @@
             // 
             this.commit_btn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.commit_btn.Location = new System.Drawing.Point(15, 194);
+            this.commit_btn.Location = new System.Drawing.Point(15, 193);
             this.commit_btn.Name = "commit_btn";
             this.commit_btn.Size = new System.Drawing.Size(160, 25);
             this.commit_btn.TabIndex = 15;
@@ -154,7 +156,7 @@
             // 
             this.next_btn.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.next_btn.Location = new System.Drawing.Point(15, 74);
+            this.next_btn.Location = new System.Drawing.Point(15, 75);
             this.next_btn.Name = "next_btn";
             this.next_btn.Size = new System.Drawing.Size(160, 25);
             this.next_btn.TabIndex = 13;
@@ -168,11 +170,21 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.page_list.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.page_list.FormattingEnabled = true;
-            this.page_list.Location = new System.Drawing.Point(15, 114);
+            this.page_list.Location = new System.Drawing.Point(15, 116);
             this.page_list.Name = "page_list";
             this.page_list.Size = new System.Drawing.Size(160, 20);
             this.page_list.TabIndex = 14;
             this.page_list.SelectedIndexChanged += new System.EventHandler(this.page_list_SelectedIndexChanged);
+            // 
+            // add_to_cheat_list_btn
+            // 
+            this.add_to_cheat_list_btn.Location = new System.Drawing.Point(15, 234);
+            this.add_to_cheat_list_btn.Name = "add_to_cheat_list_btn";
+            this.add_to_cheat_list_btn.Size = new System.Drawing.Size(160, 25);
+            this.add_to_cheat_list_btn.TabIndex = 20;
+            this.add_to_cheat_list_btn.Text = "Add to Cheat List";
+            this.add_to_cheat_list_btn.UseVisualStyleBackColor = true;
+            this.add_to_cheat_list_btn.Click += new System.EventHandler(this.add_to_cheat_list_btn_Click);
             // 
             // HexEditor
             // 
@@ -204,5 +216,6 @@
         private TextBox input_box;
         private Button find;
         private TextBox info_box;
+        private Button add_to_cheat_list_btn;
     }
 }

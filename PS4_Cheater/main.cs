@@ -554,7 +554,7 @@
                     MappedSection section = processManager.MappedSectionList[sectionID];
 
                     offset = (int)(address - section.Start);
-                    HexEditor hexEdit = new HexEditor(memoryHelper, offset, section);
+                    HexEditor hexEdit = new HexEditor(this, memoryHelper, offset, section);
                     hexEdit.Show(this);
                 }
             }
@@ -584,7 +584,7 @@
             if (sectionID >= 0)
             {
                 MappedSection section = processManager.MappedSectionList[sectionID];
-                HexEditor hexEdit = new HexEditor(memoryHelper, offset, section);
+                HexEditor hexEdit = new HexEditor(this, memoryHelper, offset, section);
                 hexEdit.Show(this);
             }
         }
@@ -618,7 +618,7 @@
             cheat_list_view_item.Cells[CHEAT_LIST_DESC].Value = cheat.Description;
         }
 
-        void new_data_cheat(ulong address, string type, string data, bool lock_, string description)
+        public void new_data_cheat(ulong address, string type, string data, bool lock_, string description)
         {
             try
             {
@@ -719,17 +719,24 @@
             DataGridViewRow edited_row = cheat_list_view.Rows[e.RowIndex];
             object edited_col = edited_row.Cells[e.ColumnIndex].Value;
 
-            switch (e.ColumnIndex)
+            try
             {
-                case CHEAT_LIST_VALUE:
-                    DataCheatOperator dataCheatOperator = (DataCheatOperator)cheatList[e.RowIndex].GetSource();
-                    CheatOperator destOperator = cheatList[e.RowIndex].GetDestination();
-                    dataCheatOperator.Set((string)edited_col);
-                    destOperator.SetRuntime(dataCheatOperator);
-                    break;
-                case CHEAT_LIST_DESC:
-                    cheatList[e.RowIndex].Description = (string)edited_col;
-                    break;
+                switch (e.ColumnIndex)
+                {
+                    case CHEAT_LIST_VALUE:
+                        DataCheatOperator dataCheatOperator = (DataCheatOperator)cheatList[e.RowIndex].GetSource();
+                        CheatOperator destOperator = cheatList[e.RowIndex].GetDestination();
+                        dataCheatOperator.Set((string)edited_col);
+                        destOperator.SetRuntime(dataCheatOperator);
+                        break;
+                    case CHEAT_LIST_DESC:
+                        cheatList[e.RowIndex].Description = (string)edited_col;
+                        break;
+                }
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message);
             }
         }
 
@@ -1178,8 +1185,18 @@
                 return;
 
             DataGridViewSelectedRowCollection items = cheat_list_view.SelectedRows;
+            Cheat cheat = cheatList[items[0].Index];
 
-            ulong address = ulong.Parse((string)items[0].Cells[CHEAT_LIST_ADDRESS].Value, NumberStyles.HexNumber);
+            ulong address = 0;
+            if (cheat.CheatType == CheatType.DATA_TYPE)
+            {
+                address = ulong.Parse((string)items[0].Cells[CHEAT_LIST_ADDRESS].Value, NumberStyles.HexNumber);
+            }
+            else if (cheat.CheatType == CheatType.SIMPLE_POINTER_TYPE)
+            {
+                SimplePointerCheatOperator destOperator = (SimplePointerCheatOperator)cheat.GetDestination();
+                address = destOperator.getBaseAddress();
+            }
             int sectionID = processManager.MappedSectionList.GetMappedSectionID(address);
 
             if (sectionID >= 0)
@@ -1187,7 +1204,7 @@
                 MappedSection section = processManager.MappedSectionList[sectionID];
 
                 int offset = (int)(address - section.Start);
-                HexEditor hexEdit = new HexEditor(memoryHelper, offset, section);
+                HexEditor hexEdit = new HexEditor(this, memoryHelper, offset, section);
                 hexEdit.Show(this);
             }
         }
@@ -1262,37 +1279,75 @@
                 return;
             if (cheat_list_view.SelectedRows.Count != 1)
                 return;
-
-            DataGridViewRow item = cheat_list_view.SelectedRows[0];
-
-            ulong address = ulong.Parse((string)item.Cells[CHEAT_LIST_ADDRESS].Value, NumberStyles.HexNumber);
-            int sectionID = processManager.MappedSectionList.GetMappedSectionID(address);
-            if (sectionID < 0)
+            try
             {
-                MessageBox.Show("Invalid Address!!");
-                return;
+                DataGridViewRow item = cheat_list_view.SelectedRows[0];
+                Cheat cheat = cheatList[item.Index];
+                bool isPointer = false;
+                ulong address = 0;
+                List<long> offsets = null;
+                if (cheat.CheatType == CheatType.DATA_TYPE)
+                {
+                    address = ulong.Parse((string)item.Cells[CHEAT_LIST_ADDRESS].Value, NumberStyles.HexNumber);
+                    int sectionID = processManager.MappedSectionList.GetMappedSectionID(address);
+                    if (sectionID < 0)
+                    {
+                        MessageBox.Show("Invalid Address!!");
+                        return;
+                    }
+                }
+                else if (cheat.CheatType == CheatType.SIMPLE_POINTER_TYPE)
+                {
+                    isPointer = true;
+                    SimplePointerCheatOperator destOperator = (SimplePointerCheatOperator)cheat.GetDestination();
+                    offsets = destOperator.getOffsets();
+                    address = destOperator.getBaseAddress();
+                }
+
+                NewAddress newAddress = new NewAddress(processManager, address,
+                    (string)item.Cells[CHEAT_LIST_VALUE].Value,
+                    (string)item.Cells[CHEAT_LIST_TYPE].Value,
+                    (string)item.Cells[CHEAT_LIST_DESC].Value,
+                    (bool)item.Cells[CHEAT_LIST_LOCK].Value,
+                    isPointer, offsets, true);
+                if (newAddress.ShowDialog() != DialogResult.OK)
+                    return;
+
+                ValueType valueType = MemoryHelper.GetValueTypeByString(newAddress.ValueTypeStr);
+                DataCheatOperator dataCheatOperator = new DataCheatOperator(newAddress.Value, valueType, processManager);
+                AddressCheatOperator addressCheatOperator = new AddressCheatOperator(newAddress.Address, processManager);
+
+                if (!newAddress.Pointer)
+                {
+                    cheat = new DataCheat(dataCheatOperator, addressCheatOperator, newAddress.Lock, newAddress.Descriptioin, processManager);
+                    addressCheatOperator.SetRuntime(dataCheatOperator);
+                } else
+                {
+                    List<OffsetCheatOperator> offsetOperators = new List<OffsetCheatOperator>();
+
+                    for (int i = 0; i < offsets.Count; ++i)
+                    {
+                        OffsetCheatOperator offsetOperator = new OffsetCheatOperator(offsets[i],
+                            ValueType.ULONG_TYPE, processManager);
+                        offsetOperators.Add(offsetOperator);
+                    }
+
+                    SimplePointerCheatOperator destOperator = new SimplePointerCheatOperator(addressCheatOperator, offsetOperators, valueType, processManager);
+
+                    cheat = new SimplePointerCheat(dataCheatOperator, destOperator,
+                        newAddress.Lock, newAddress.Descriptioin, processManager);
+                }
+                cheatList[item.Index] = cheat;
+
+                item.Cells[CHEAT_LIST_VALUE].Value = dataCheatOperator.Display();
+                item.Cells[CHEAT_LIST_TYPE].Value = MemoryHelper.GetStringOfValueType(dataCheatOperator.ValueType);
+                item.Cells[CHEAT_LIST_DESC].Value = newAddress.Descriptioin;
+                item.Cells[CHEAT_LIST_LOCK].Value = newAddress.Lock;
             }
-
-            NewAddress newAddress = new NewAddress(processManager, address,
-                (string)item.Cells[CHEAT_LIST_VALUE].Value,
-                (string)item.Cells[CHEAT_LIST_TYPE].Value,
-                (string)item.Cells[CHEAT_LIST_DESC].Value,
-                (bool)item.Cells[CHEAT_LIST_LOCK].Value,
-                false, null, true);
-            if (newAddress.ShowDialog() != DialogResult.OK)
-                return;
-
-            ValueType valueType = MemoryHelper.GetValueTypeByString(newAddress.ValueTypeStr);
-            DataCheatOperator dataCheatOperator = new DataCheatOperator(newAddress.Value, valueType, processManager);
-            AddressCheatOperator addressCheatOperator = new AddressCheatOperator(newAddress.Address, processManager);
-            DataCheat dataCheat = new DataCheat(dataCheatOperator, addressCheatOperator, newAddress.Lock, newAddress.Descriptioin, processManager);
-            addressCheatOperator.SetRuntime(dataCheatOperator);
-            cheatList[item.Index] = dataCheat;
-
-            item.Cells[CHEAT_LIST_VALUE].Value = dataCheatOperator.Display();
-            item.Cells[CHEAT_LIST_TYPE].Value = MemoryHelper.GetStringOfValueType(dataCheatOperator.ValueType);
-            item.Cells[CHEAT_LIST_DESC].Value = newAddress.Descriptioin;
-            item.Cells[CHEAT_LIST_LOCK].Value = newAddress.Lock;
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message);
+            }
         }
     }
 }

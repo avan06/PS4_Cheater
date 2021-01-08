@@ -16,6 +16,7 @@ namespace PS4_Cheater
 {
     public partial class HexEditor : Form
     {
+        private main mainForm;
         private MappedSection section;
         private MemoryHelper memoryHelper;
 
@@ -26,10 +27,11 @@ namespace PS4_Cheater
 
         const int page_size = 8 * 1024 * 1024;
 
-        public HexEditor(MemoryHelper memoryHelper, int offset, MappedSection section)
+        public HexEditor(main mainForm, MemoryHelper memoryHelper, int offset, MappedSection section)
         {
             InitializeComponent();
 
+            this.mainForm = mainForm;
             this.memoryHelper = memoryHelper;
             this.section = section;
             this.page = offset / page_size;
@@ -195,6 +197,63 @@ namespace PS4_Cheater
 8: {3:X8}={3}
 F: {4}
 D: {4}", info1, info2, info4, info8, infoF, infoD);
+        }
+
+        private void add_to_cheat_list_btn_Click(object sender, EventArgs e)
+        {
+            if (hexBox.SelectionStart <= 0)
+            {
+                return;
+            }
+            ulong address = section.Start + (ulong)hexBox.ByteProvider.Length + (ulong)hexBox.SelectionStart;
+            string value = "", valueTypeStr = "";
+
+            List<byte> tmpBList = new List<byte>();
+            for (int idx = 0; idx <= 8; ++idx)
+            {
+                tmpBList.Add(hexBox.ByteProvider.ReadByte(hexBox.SelectionStart + idx));
+            }
+            switch (hexBox.SelectionLength)
+            {
+                case 1:
+                    
+                    value = Convert.ToUInt16(tmpBList.GetRange(0, 1).ToArray()[0]).ToString();
+                    valueTypeStr = CONSTANT.BYTE_TYPE;
+                    break;
+                case 2:
+                    value = BitConverter.ToUInt16(tmpBList.GetRange(0, 2).ToArray(), 0).ToString();
+                    valueTypeStr = CONSTANT.BYTE_2_TYPE;
+                    break;
+                case 4:
+                    value = BitConverter.ToUInt32(tmpBList.GetRange(0, 4).ToArray(), 0).ToString();
+                    valueTypeStr = CONSTANT.BYTE_4_TYPE;
+                    break;
+                case 8:
+                    value = BitConverter.ToUInt64(tmpBList.GetRange(0, 8).ToArray(), 0).ToString();
+                    valueTypeStr = CONSTANT.BYTE_8_TYPE;
+                    break;
+                default:
+                    value = BitConverter.ToUInt32(tmpBList.GetRange(0, 4).ToArray(), 0).ToString();
+                    valueTypeStr = CONSTANT.BYTE_4_TYPE;
+                    break;
+            }
+            NewAddress newAddress = new NewAddress(null, address,
+                value,
+                valueTypeStr,
+                "",
+                false,
+                false, null, false);
+            if (newAddress.ShowDialog() != DialogResult.OK)
+                return;
+
+            if (!newAddress.Pointer)
+            {
+                mainForm.new_data_cheat(newAddress.Address, newAddress.ValueTypeStr, newAddress.Value, newAddress.Lock, newAddress.Descriptioin);
+            }
+            else
+            {
+                mainForm.new_pointer_cheat(address, newAddress.OffsetList, newAddress.ValueTypeStr, newAddress.Value, newAddress.Lock, newAddress.Descriptioin);
+            }
         }
     }
 }

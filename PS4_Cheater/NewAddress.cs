@@ -29,14 +29,14 @@ namespace PS4_Cheater
             this.ProcessManager = ProcessManager;
         }
 
-        public NewAddress(ProcessManager processManager, ulong address, string value, string valueTypeStr, string descriptioin, bool _lock, bool pointer, List<long> offsetList, bool isEdit) : this(processManager)
+        public NewAddress(ProcessManager processManager, ulong address, string value, string valueTypeStr, string descriptioin, bool _lock, bool isPointer, List<long> offsetList, bool isEdit) : this(processManager)
         {
             Address = address;
             Value = value;
             ValueTypeStr = valueTypeStr;
             Descriptioin = descriptioin;
             Lock = _lock;
-            Pointer = pointer;
+            Pointer = isPointer;
             OffsetList = offsetList;
 
             address_box.Text = address.ToString("X");
@@ -44,11 +44,11 @@ namespace PS4_Cheater
             value_box.Text = value;
             description_box.Text = descriptioin;
             lock_box.Checked = _lock;
-            pointer_box.Checked = pointer;
+            pointer_box.Checked = Pointer;
             if (isEdit)
             {
                 address_box.ReadOnly = true;
-                if (!pointer)
+                if (!Pointer)
                 {
                     pointer_box.Enabled = false;
                 }
@@ -108,6 +108,21 @@ namespace PS4_Cheater
             } else
             {
                 type_box.SelectedIndex = 2;
+            }
+
+            if (OffsetList != null && OffsetList.Count > 0)
+            {
+                add_offset_btn.PerformClick();
+                foreach (long _ in OffsetList)
+                {
+                    add_offset_btn.PerformClick();
+                }
+                offset_box_list[0].Text = Address.ToString("X");
+                for (int oIdx = 0; oIdx < OffsetList.Count; ++oIdx)
+                {
+                    offset_box_list[oIdx+1].Text = OffsetList[oIdx].ToString("X");
+                }
+                OffsetList.Clear();
             }
         }
 

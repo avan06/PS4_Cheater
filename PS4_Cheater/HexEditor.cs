@@ -205,7 +205,11 @@ D: {4}", info1, info2, info4, info8, infoF, infoD);
             {
                 return;
             }
-            ulong address = section.Start + (ulong)hexBox.ByteProvider.Length + (ulong)hexBox.SelectionStart;
+            ulong address = section.Start + (ulong)hexBox.SelectionStart;
+            if (page > 0)
+            {
+                address += (ulong)(page * hexBox.ByteProvider.Length);
+            }
             string value = "", valueTypeStr = "";
 
             List<byte> tmpBList = new List<byte>();

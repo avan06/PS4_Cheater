@@ -43,7 +43,7 @@
             this.next_pointer_finder_worker = new System.ComponentModel.BackgroundWorker();
             this.label1 = new System.Windows.Forms.Label();
             this.fast_scan_box = new System.Windows.Forms.CheckBox();
-            this.trashFilter_box = new System.Windows.Forms.CheckBox();
+            this.isFilterBox = new System.Windows.Forms.CheckBox();
             this.status_strip.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pointer_list_view)).BeginInit();
             this.pointer_list_menu.SuspendLayout();
@@ -129,12 +129,12 @@
             this.pointer_list_menu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.pointer_list_view_add_to_cheat_list});
             this.pointer_list_menu.Name = "pointer_list_menu";
-            this.pointer_list_menu.Size = new System.Drawing.Size(181, 48);
+            this.pointer_list_menu.Size = new System.Drawing.Size(171, 26);
             // 
             // pointer_list_view_add_to_cheat_list
             // 
             this.pointer_list_view_add_to_cheat_list.Name = "pointer_list_view_add_to_cheat_list";
-            this.pointer_list_view_add_to_cheat_list.Size = new System.Drawing.Size(180, 22);
+            this.pointer_list_view_add_to_cheat_list.Size = new System.Drawing.Size(170, 22);
             this.pointer_list_view_add_to_cheat_list.Text = "Add to Cheat List";
             this.pointer_list_view_add_to_cheat_list.Click += new System.EventHandler(this.pointer_list_view_add_to_cheat_list_Click);
             // 
@@ -179,22 +179,22 @@
             this.fast_scan_box.UseVisualStyleBackColor = true;
             this.fast_scan_box.CheckedChanged += new System.EventHandler(this.fast_scan_box_CheckedChanged);
             // 
-            // trashFilter_box
+            // isFilterBox
             // 
-            this.trashFilter_box.AutoSize = true;
-            this.trashFilter_box.Location = new System.Drawing.Point(777, 12);
-            this.trashFilter_box.Name = "trashFilter_box";
-            this.trashFilter_box.Size = new System.Drawing.Size(48, 16);
-            this.trashFilter_box.TabIndex = 11;
-            this.trashFilter_box.Text = "Filter";
-            this.trashFilter_box.UseVisualStyleBackColor = true;
+            this.isFilterBox.AutoSize = true;
+            this.isFilterBox.Location = new System.Drawing.Point(777, 12);
+            this.isFilterBox.Name = "isFilterBox";
+            this.isFilterBox.Size = new System.Drawing.Size(48, 16);
+            this.isFilterBox.TabIndex = 11;
+            this.isFilterBox.Text = "Filter";
+            this.isFilterBox.UseVisualStyleBackColor = true;
             // 
             // PointerFinder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(851, 421);
-            this.Controls.Add(this.trashFilter_box);
+            this.Controls.Add(this.isFilterBox);
             this.Controls.Add(this.fast_scan_box);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.next_btn);
@@ -228,7 +228,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ToolStripStatusLabel msg;
         private System.Windows.Forms.CheckBox fast_scan_box;
-        private System.Windows.Forms.CheckBox trashFilter_box;
+        private System.Windows.Forms.CheckBox isFilterBox;
         private System.Windows.Forms.ContextMenuStrip pointer_list_menu;
         private System.Windows.Forms.ToolStripMenuItem pointer_list_view_add_to_cheat_list;
     }

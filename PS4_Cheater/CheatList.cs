@@ -52,7 +52,13 @@ namespace PS4_Cheater
             }
             set {
                 _valueType = value;
-                MemoryHelper.InitMemoryHandler(ValueType, CompareType.NONE, false);
+                if (_valueType == ValueType.HEX_TYPE && MemoryHelper.Length > 0)
+                {
+                    MemoryHelper.InitMemoryHandler(ValueType, CompareType.NONE, false, MemoryHelper.Length);
+                } else
+                {
+                    MemoryHelper.InitMemoryHandler(ValueType, CompareType.NONE, false);
+                }
             }
         }
         public CheatOperatorType CheatOperatorType { get; set; }
@@ -142,6 +148,10 @@ namespace PS4_Cheater
         {
             ValueType = MemoryHelper.GetValueTypeByString(cheat_elements[start_idx + DATA_TYPE]);
             data = MemoryHelper.StringToBytes(cheat_elements[start_idx + DATA]);
+            if (ValueType == ValueType.HEX_TYPE && data.Length > 0)
+            {
+                MemoryHelper.Length = data.Length;
+            }
             start_idx += 2;
             return true;
         }

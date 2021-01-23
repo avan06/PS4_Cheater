@@ -114,7 +114,7 @@ namespace PS4_Cheater
             this.DefaultProcessID = defaultProcessID;
         }
 
-        public static bool Connect(string ip)
+        public static (bool, string) Connect(string ip)
         {
             try
             {
@@ -122,13 +122,13 @@ namespace PS4_Cheater
                 ps4 = new PS4RPC(ip);
                 ps4.Connect();
                 mutex.ReleaseMutex();
-                return true;
+                return (true, "");
             }
-            catch
+            catch (Exception exception)
             {
                 mutex.ReleaseMutex();
+                return (false, exception.Message);
             }
-            return false;
         }
 
         public static bool Disconnect()

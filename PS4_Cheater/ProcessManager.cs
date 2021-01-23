@@ -195,6 +195,7 @@ namespace PS4_Cheater
         public ulong Offset { get; set; }
         public ResultList ResultList { get; set; }
         public List<ResultList> ResultLists { get; set; }
+        public bool IsFilter { get; set; }
 
 
         public MappedSection()
@@ -322,8 +323,6 @@ namespace PS4_Cheater
                 address += (ulong)cur_length;
             }
         }
-        public bool IsSonyTrash(string name) => (!name.Equals("libSceCdlgUtilServer.sprx") && name.StartsWith("libSce")) || name.StartsWith("libc.prx") || (name.StartsWith("SceShell") || name.StartsWith("SceLib")) || (name.StartsWith("SceNp") || name.StartsWith("SceVoice") || (name.StartsWith("SceFios") || name.StartsWith("libkernel"))) || name.StartsWith("SceVdec");
-
     }
 
     public class MappedSectionList
@@ -447,12 +446,12 @@ namespace PS4_Cheater
             return result_list;
         }
 
-        private bool IsSonyTrash(string name) => (!name.Equals("libSceCdlgUtilServer.sprx") && name.StartsWith("libSce")) || name.StartsWith("libc.prx") || (name.StartsWith("SceShell") || name.StartsWith("SceLib")) || (name.StartsWith("SceNp") || name.StartsWith("SceVoice") || (name.StartsWith("SceFios") || name.StartsWith("libkernel"))) || name.StartsWith("SceVdec");
-
-        public void InitMemorySectionList(ProcessInfo pi, bool isTrashFilter)
+        public void InitMemorySectionList(ProcessInfo pi)
         {
             mapped_section_list.Clear();
             TotalMemorySize = 0;
+
+            if (pi.entries == null) return;
 
             for (int i = 0; i < pi.entries.Length; i++)
             {
@@ -461,13 +460,8 @@ namespace PS4_Cheater
                 {
                     ulong length = entry.end - entry.start;
                     ulong start = entry.start;
-                    string name = entry.name;
-                    ulong offset = entry.offset;
+                    bool isFilter = Util.SectionIsFilter(entry.name);
 
-                    if (isTrashFilter && IsSonyTrash(name))
-                    {
-                        continue;
-                    }
                     int idx = 0;
                     ulong buffer_length = 1024 * 1024 * 128;
 
@@ -495,14 +489,13 @@ namespace PS4_Cheater
                         mappedSection.Start = start;
                         mappedSection.Length = (int)cur_length;
                         mappedSection.Name = entry.name + "[" + idx + "]";
-                        if (offset > 0)
-                        {
-                            mappedSection.Name += "[" + offset.ToString("X") + "]";
-                        }
                         mappedSection.Check = false;
                         mappedSection.Prot = entry.prot;
                         mappedSection.Offset = entry.offset;
-
+                        if (isFilter)
+                        {
+                            mappedSection.IsFilter = true;
+                        }
                         mapped_section_list.Add(mappedSection);
 
                         start += cur_length;

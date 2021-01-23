@@ -13,6 +13,7 @@
     using System.Windows.Forms;
     using System.Linq;
     using System.Threading;
+    using System.Text.RegularExpressions;
 
     public partial class main : Form
     {
@@ -93,6 +94,7 @@
         {
             CONSTANT.EXACT_VALUE,
         };
+        private string searchSectionTemp = "";
 
         public main()
         {
@@ -128,6 +130,11 @@
             this.new_scan_btn.Text = CONSTANT.FIRST_SCAN;
             this.refresh_btn.Text = CONSTANT.REFRESH;
             this.Text += " " + CONSTANT.MAJOR_VERSION + "." + CONSTANT.SECONDARY_VERSION + "." + CONSTANT.THIRD_VERSION;
+
+            if (Config.getSetting("sectionFilterKeys").Length == 0)
+            {
+                Config.updateSeeting("sectionFilterKeys", CONSTANT.DEFAULT_SECTION_FILTER);
+            }
         }
 
         private void main_FormClosing(object sender, FormClosingEventArgs e)
@@ -282,8 +289,7 @@
                     new_scan_btn.Enabled = true;
                     valueTypeList.Enabled = false;
                     alignment_box.Enabled = false;
-                    trashFilter_box.Enabled = false;
-                    //section_list_box.lo = false;
+                    isFilterBox.Enabled = false;
 
                     new_scan_worker.RunWorkerAsync();
 
@@ -293,8 +299,7 @@
                 {
                     valueTypeList.Enabled = true;
                     alignment_box.Enabled = true;
-                    trashFilter_box.Enabled = true;
-                    //section_list_box.Enabled = true;
+                    isFilterBox.Enabled = true;
                     refresh_btn.Enabled = false;
                     next_scan_btn.Enabled = false;
                     new_scan_btn.Text = CONSTANT.FIRST_SCAN;
@@ -311,7 +316,7 @@
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
         }
 
@@ -333,7 +338,7 @@
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
         }
 
@@ -356,22 +361,22 @@
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
         }
 
-        private void set_section_list_box(bool check)
+        private void set_section_list_view(bool check)
         {
-            for (int i = 0; i < section_list_box.Items.Count; ++i)
+            for (int idx = 0; idx < sectionListView.Items.Count; ++idx)
             {
-                section_list_box.SetItemChecked(i, check);
+                sectionListView.Items[idx].Checked = check;
             }
         }
 
         private void select_all_check_box_Click(object sender, EventArgs e)
         {
             bool check = select_all.Checked;
-            set_section_list_box(check);
+            set_section_list_view(check);
         }
 
         private void update_result_list_view_ui(WorkerReturn ret)
@@ -381,9 +386,9 @@
             result_list_view.Items.AddRange(ret.ListViewItems.ToArray());
             result_list_view.EndUpdate();
 
-            for (int i = 0; i < section_list_box.Items.Count; ++i)
+            for (int idx = 0; idx < sectionListView.Items.Count; ++idx)
             {
-                section_list_box.SetItemChecked(i, ret.MappedSectionCheckeSet[i]);
+                sectionListView.Items[idx].Checked = ret.MappedSectionCheckeSet[idx];
             }
             msg.Text = ret.Results + " results";
         }
@@ -524,7 +529,10 @@
                 save_file_dialog.Filter = "Binary files (*.bin)|*.bin|All files (*.*)|*.*";
                 save_file_dialog.FilterIndex = 1;
                 save_file_dialog.RestoreDirectory = true;
-                save_file_dialog.FileName = (string)section_list_box.Items[section_list_box.SelectedIndex];
+                ListViewItem item = sectionViewItemGetByID(sectionID);
+                save_file_dialog.FileName = string.Format("{0}-{1}-{2}-{3}",
+                    item.SubItems[0].Text, item.SubItems[1].Text,
+                    item.SubItems[2].Text, item.SubItems[3].Text);
 
                 if (save_file_dialog.ShowDialog() == DialogResult.OK)
                 {
@@ -574,32 +582,85 @@
             }
         }
 
-        private void sectionView_Click(object sender, EventArgs e)
+        private void sectionHexMenu_Click(object sender, EventArgs e)
         {
-            int sectionID = -1;
             int offset = 0;
-
-            sectionID = section_list_box.SelectedIndex;
-
-            if (sectionID >= 0)
+            ListView.SelectedListViewItemCollection items = sectionListView.SelectedItems;
+            if (items.Count > 0)
             {
-                MappedSection section = processManager.MappedSectionList[sectionID];
+                MappedSection section = processManager.MappedSectionList[int.Parse(items[items.Count-1].Name)];
                 HexEditor hexEdit = new HexEditor(this, memoryHelper, offset, section);
                 hexEdit.Show(this);
             }
         }
 
-        private void sectionDump_Click(object sender, EventArgs e)
+        private void sectionDumpMenu_Click(object sender, EventArgs e)
         {
-            if (section_list_box.SelectedIndex >= 0)
+            ListView.SelectedListViewItemCollection items = sectionListView.SelectedItems;
+            if (items.Count > 0)
             {
-                dump_dialog(section_list_box.SelectedIndex);
+                for (int idx = 0; idx < items.Count; ++idx)
+                {
+                    dump_dialog(int.Parse(items[idx].Name));
+                }
             }
         }
 
-        private void section_list_box_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void sectionCheckMenu_Click(object sender, EventArgs e)
         {
-            processManager.MappedSectionList.SectionCheck(e.Index, e.NewValue == CheckState.Checked);
+            ListView.SelectedListViewItemCollection items = sectionListView.SelectedItems;
+            if (items.Count > 0)
+            {
+                for (int idx = 0; idx < items.Count; ++idx)
+                {
+                    items[idx].Checked = !items[idx].Checked;
+                }
+            }
+        }
+
+        private void sectionListView_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            ListViewItem item = sectionListView.Items[e.Index];
+            processManager.MappedSectionList.SectionCheck(int.Parse(item.Name), e.NewValue == CheckState.Checked);
+
+            if (item.Checked)
+            {
+                item.BackColor = Color.Azure;
+            }
+            else
+            {
+                item.BackColor = Color.LightSkyBlue;
+            }
+        }
+
+        private void sectionSearchBtn_Click(object sender, EventArgs e)
+        {
+            if (InputBox.Show("Search", "Enter the value of the search processes name", ref searchSectionTemp, null) != DialogResult.OK)
+            {
+                return;
+            }
+            int startIndex = 0;
+            ListView.SelectedListViewItemCollection items = sectionListView.SelectedItems;
+            if (items.Count > 0 && items[items.Count - 1].Index + 1 < sectionListView.Items.Count)
+            {
+                startIndex = items[items.Count - 1].Index + 1;
+            }
+            ListViewItem item = sectionListView.FindItemWithText(searchSectionTemp, true, startIndex);
+            if (item != null)
+            {
+                sectionListView.Items[item.Index].Selected = true;
+                sectionListView.Items[item.Index].EnsureVisible();
+            }
+        }
+
+        private ListViewItem sectionViewItemGetByID(int sectionID)
+        {
+            if (!sectionListView.Items.ContainsKey(sectionID.ToString()))
+            {
+                return null;
+            }
+            ListViewItem[] items = sectionListView.Items.Find(sectionID.ToString(), false);
+            return items[0];
         }
 
         void add_new_row_to_cheat_list_view(Cheat cheat)
@@ -736,7 +797,7 @@
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
         }
 
@@ -863,7 +924,7 @@
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
         }
 
@@ -886,27 +947,59 @@
         {
             try
             {
-                section_list_box.Items.Clear();
+                sectionListView.Items.Clear();
                 result_list_view.Items.Clear();
                 new_scan_btn.Enabled = true;
                 valueTypeList.Enabled = true;
                 compareTypeList.Enabled = true;
-                section_list_box.Enabled = true;
+                sectionListView.Enabled = true;
 
                 ProcessInfo processInfo = processManager.GetProcessInfo(processes_comboBox.Text);
                 Util.DefaultProcessID = processInfo.pid;
-                processManager.MappedSectionList.InitMemorySectionList(processInfo, trashFilter_box.Checked);
+                processManager.MappedSectionList.InitMemorySectionList(processInfo);
 
-                section_list_box.BeginUpdate();
-                for (int section_idx = 0; section_idx < processManager.MappedSectionList.Count; ++section_idx)
+                sectionListView.BeginUpdate();
+                for (int sectionID = 0; sectionID < processManager.MappedSectionList.Count; ++sectionID)
                 {
-                    section_list_box.Items.Add(processManager.MappedSectionList.GetSectionName(section_idx), false);
+                    MappedSection mappedSection = processManager.MappedSectionList[sectionID];
+                    if (isFilterBox.Checked && mappedSection.IsFilter)
+                    {
+                        continue;
+                    }
+                    string addr = String.Format("{0:X9}", mappedSection.Start);
+                    int itemIdx = sectionListView.Items.Count;
+                    sectionListView.Items.Add(sectionID.ToString(), addr, 0);
+                    sectionListView.Items[itemIdx].SubItems.Add(mappedSection.Name);
+                    sectionListView.Items[itemIdx].SubItems.Add(mappedSection.Prot.ToString("X"));
+                    sectionListView.Items[itemIdx].SubItems.Add((mappedSection.Length / 1024).ToString() + "KB");
+                    sectionListView.Items[itemIdx].SubItems.Add(sectionID.ToString());
+                    if (mappedSection.Offset != 0)
+                    {
+                        sectionListView.Items[itemIdx].SubItems.Add(mappedSection.Offset.ToString("X"));
+                    }
+                    if (mappedSection.IsFilter)
+                    {
+                        sectionListView.Items[itemIdx].Tag = "filter";
+                        sectionListView.Items[itemIdx].BackColor = Color.DarkGray;
+                    }
+                    if (mappedSection.Name.StartsWith("executable"))
+                    {
+                        sectionListView.Items[itemIdx].BackColor = Color.Honeydew;
+                    }
+                    else if (mappedSection.Name.Contains("NoName"))
+                    {
+                        sectionListView.Items[itemIdx].ForeColor = Color.Red;
+                    }
+                    else if (Regex.IsMatch(mappedSection.Name, @"^\[\d+\]$"))
+                    {
+                        sectionListView.Items[itemIdx].ForeColor = Color.DarkRed;
+                    }
                 }
-                section_list_box.EndUpdate();
+                sectionListView.EndUpdate();
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show("SectionList init failed, " + exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
         }
 		
@@ -914,8 +1007,11 @@
         {
             try
             {
-				
-                MemoryHelper.Connect(ip_box.Text);
+                var connResult = MemoryHelper.Connect(ip_box.Text);
+                if (!connResult.Item1)
+                {
+                    throw new Exception(connResult.Item2);
+                }
 
                 int selectedIdx = 0;
                 this.processes_comboBox.Items.Clear();
@@ -924,6 +1020,10 @@
                 {
                     int idx = this.processes_comboBox.Items.Add(process.name);
                     if (process.name == CONSTANT.DEFAULT_PROCESS)
+                    {
+                        selectedIdx = idx;
+                    }
+                    else if (selectedIdx == 0 && Regex.IsMatch(process.titleId, "CUSA|PCAS|PCJS|PLAS|PLJS|PLJM|PCCS|PCKS"))
                     {
                         selectedIdx = idx;
                     }
@@ -1264,13 +1364,28 @@
             }
         }
 
-        private void trashFilterBox_CheckedChanged(object sender, EventArgs e)
+        private void isFilterBox_CheckedChanged(object sender, EventArgs e)
         {
             int idx = processes_comboBox.SelectedIndex;
             if (idx == -1) return;
 
-            processes_comboBox.SelectedIndex = 0;
-            processes_comboBox.SelectedIndex = idx;
+            if (isFilterBox.Checked)
+            {
+                sectionListView.BeginUpdate();
+                foreach (ListViewItem item in sectionListView.Items)
+                {
+                    if ("filter".Equals(item.Tag))
+                    {
+                        item.Remove();
+                    }
+                }
+                sectionListView.EndUpdate();
+            } else
+            {
+                processes_comboBox.SelectedIndex = 0;
+                processes_comboBox.SelectedIndex = idx;
+            }
+
         }
 
         private void cheat_list_item_edit_Click(object sender, EventArgs e)
@@ -1346,8 +1461,18 @@
             }
             catch (Exception exception)
             {
-                MessageBox.Show(exception.Message);
+                MessageBox.Show(exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
             }
+        }
+
+        private void filterRuleBtn_Click(object sender, EventArgs e)
+        {
+            string sectionFilterKeys = Config.getSetting("sectionFilterKeys");
+            if (InputBox.Show("Section Filter", "Enter the value of the filter keys", ref sectionFilterKeys, null) != DialogResult.OK)
+            {
+                return;
+            }
+            Config.updateSeeting("sectionFilterKeys", sectionFilterKeys);
         }
     }
 }

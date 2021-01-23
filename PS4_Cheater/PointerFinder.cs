@@ -190,8 +190,8 @@ namespace PS4_Cheater
             {
                 if (pointer_finder_worker.CancellationPending) break;
                 MappedSection mappedSection = processManager.MappedSectionList[section_idx];
-                if (trashFilter_box.Checked && mappedSection.IsSonyTrash(mappedSection.Name)) continue;
-                if (!trashFilter_box.Checked && mappedSection.Name.StartsWith("libSce")) continue;
+                if (isFilterBox.Checked && Util.SectionIsFilter(mappedSection.Name)) continue;
+                if (!isFilterBox.Checked && mappedSection.Name.StartsWith("libSce")) continue;
                 mappedSection.PointerSearchInit(processManager, MemoryHelper, pointerList);
                 pointer_finder_worker.ReportProgress((int)(((float)section_idx / processManager.MappedSectionList.Count) * 80), 
                     "Init section block..." + pointerList.Count + " (" + (section_idx + 1) + "/" + processManager.MappedSectionList.Count + "), " + mappedSection.ToString());
@@ -262,7 +262,7 @@ namespace PS4_Cheater
                 }
                 catch (Exception exception)
                 {
-                    MessageBox.Show(exception.Message);
+                    MessageBox.Show(exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 }
             }
         }
@@ -284,8 +284,8 @@ namespace PS4_Cheater
             {
                 if (next_pointer_finder_worker.CancellationPending) break;
                 MappedSection mappedSection = processManager.MappedSectionList[section_idx];
-                if (trashFilter_box.Checked && mappedSection.IsSonyTrash(mappedSection.Name)) continue;
-                if (!trashFilter_box.Checked && mappedSection.Name.StartsWith("libSce")) continue;
+                if (isFilterBox.Checked && Util.SectionIsFilter(mappedSection.Name)) continue;
+                if (!isFilterBox.Checked && mappedSection.Name.StartsWith("libSce")) continue;
                 mappedSection.PointerSearchInit(processManager, MemoryHelper, pointerList);
                 next_pointer_finder_worker.ReportProgress((int)(((float)section_idx / processManager.MappedSectionList.Count) * 65), 
                     "Init section block..." + pointerList.Count + " (" + (section_idx + 1) + "/" + processManager.MappedSectionList.Count + "), " + mappedSection.ToString());
@@ -425,7 +425,7 @@ namespace PS4_Cheater
                 }
                 catch (Exception exception)
                 {
-                    MessageBox.Show(exception.Message);
+                    MessageBox.Show(exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
                 }
             }
 

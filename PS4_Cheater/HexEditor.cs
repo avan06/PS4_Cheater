@@ -151,10 +151,17 @@ namespace PS4_Cheater
 
         private void find_Click(object sender, EventArgs e)
         {
-            FindOptions findOptions = new FindOptions();
-            findOptions.Type = FindType.Hex;
-            findOptions.Hex = MemoryHelper.string_to_hex_bytes(input_box.Text);
-            hexBox.Find(findOptions);
+            try
+            {
+                FindOptions findOptions = new FindOptions();
+                findOptions.Type = FindType.Hex;
+                findOptions.Hex = MemoryHelper.string_to_hex_bytes(input_box.Text);
+                hexBox.Find(findOptions);
+            }
+            catch (Exception exception)
+            {
+                MessageBox.Show(exception.Message, exception.Source, MessageBoxButtons.OK, MessageBoxIcon.Hand);
+            }
         }
 
         private void hexBox_SelectionStartChanged(object sender, EventArgs e)

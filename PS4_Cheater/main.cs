@@ -388,7 +388,7 @@
 
             for (int idx = 0; idx < sectionListView.Items.Count; ++idx)
             {
-                sectionListView.Items[idx].Checked = ret.MappedSectionCheckeSet[idx];
+                sectionListView.Items[idx].Checked = ret.MappedSectionCheckeSet[int.Parse(sectionListView.Items[idx].Name)];
             }
             msg.Text = ret.Results + " results";
         }

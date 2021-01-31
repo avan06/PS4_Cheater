@@ -82,6 +82,14 @@ namespace PS4_Cheater
                     {
                         scanBytes = new byte[] { scanBytes[0] };
                     }
+                    else if (scanType == ValueType.HEX_TYPE)
+                    {
+                        this.length = scanVal.Length / 2;
+                        if (alignment != 1)
+                        {
+                            this.alignment = scanVal.Length / 2;
+                        }
+                    }
                 }
                 else
                 {
@@ -90,8 +98,6 @@ namespace PS4_Cheater
                 }
                 scanResult = new List<uint>();
             }
-
-            //public byte[] ScanBytes => scanBytes;
         }
         private int SelfProcessID;
         private int ProcessID {
@@ -415,7 +421,13 @@ namespace PS4_Cheater
         }
 
         /// <param name="defaultValue">[ValueType1:]ValueNumber1 [,] [ValueType2:]ValueNumber2 [,] [ValueType3:]ValueNumber3...
-        /// The default ValueType is 4 when the ValueType is omitted, which can be filled in 1, 2, 4, 8, F, D, and ignore case.
+        /// The default ValueType is 4 when the ValueType is omitted, which can be filled in 1, 2, 4, 8, F, D, H, and ignore case.
+        /// 1:1 byte
+        /// 2:2 byte
+        /// 4:4 byte
+        /// F:Float
+        /// D:Double
+        /// H:Hex
         /// The delimiter can be "," or " " (comma or space)
         /// </param>
         public void CompareWithMemoryBufferGroupScanner(string defaultValue, byte[] buffer,ref List<ResultList> nowResults, uint base_address, bool newScan)
@@ -423,21 +435,21 @@ namespace PS4_Cheater
             List<ScanCommand> scanList = new List<ScanCommand>();
             Dictionary<string, string> cmd = new Dictionary<string, string>();
             defaultValue = defaultValue.ToUpper().Trim();
-            defaultValue = Regex.Replace(defaultValue, @" *([,:]) *", "$1");
-            defaultValue = Regex.Replace(defaultValue, @" +", " ");
-            int start = 0, tmpAlignment = 0;
+            defaultValue = Regex.Replace(defaultValue, @" *([,:]) *", "$1"); //Remove useless whitespace
+            defaultValue = Regex.Replace(defaultValue, @" +", " "); //Remove excess whitespace
+            int start = 0;
             for (int idx = 0; idx <= defaultValue.Length; ++idx) //Parse input value
             {
-                if (idx == defaultValue.Length && start < defaultValue.Length)
+                if (idx == defaultValue.Length && start < defaultValue.Length) //Get the last scanVal
                 {
                     cmd["scanVal"] = defaultValue.Substring(start, defaultValue.Length - start);
                 }
-                else if (defaultValue[idx].Equals(':'))
+                else if (defaultValue[idx].Equals(':')) //Get typeKey value
                 {
                     cmd["typeKey"] = defaultValue.Substring(start, idx - start);
                     start = idx + 1;
                 }
-                else if (Regex.IsMatch(defaultValue[idx].ToString(), "[, ]"))
+                else if (Regex.IsMatch(defaultValue[idx].ToString(), "[, ]")) //Get scanVal value
                 {
                     cmd["scanVal"] = defaultValue.Substring(start, idx - start);
                     start = idx + 1;
@@ -471,15 +483,14 @@ namespace PS4_Cheater
                         case "D":
                             sCmd = new ScanCommand(ValueType.DOUBLE_TYPE, cmd["scanVal"], 8, Alignment, scan_type_equal_double, double_to_string, double_to_hex_string, string_to_double, hex_string_to_double);
                             break;
+                        case "H":
+                            sCmd = new ScanCommand(ValueType.HEX_TYPE, cmd["scanVal"], -1, Alignment, scan_type_equal_hex, hex_to_string, hex_to_hex_string, string_to_hex_bytes, null);
+                            break;
                         default:
                             sCmd = new ScanCommand(ValueType.UINT_TYPE, cmd["scanVal"], 4, Alignment, scan_type_equal_uint, uint_to_string, uint_to_hex_string, string_to_4_bytes, string_to_4_bytes);
                             break;
                     }
                     scanList.Add(sCmd);
-                    if (sCmd.alignment > tmpAlignment)
-                    {
-                        tmpAlignment = sCmd.alignment;
-                    }
                     cmd = new Dictionary<string, string>();
                 }
             }
@@ -506,9 +517,9 @@ namespace PS4_Cheater
                     nowResults[rIdx].Begin();
                 }
             }
-            if (Alignment > tmpAlignment)
+            if (Alignment > scanList[0].alignment)
             {
-                Alignment = tmpAlignment;
+                Alignment = scanList[0].alignment;
             }
 
             int index = 0;
@@ -545,7 +556,7 @@ namespace PS4_Cheater
                             {
                                 sIdx = -1;
                                 groupOffsets.Clear();
-                                if (sCmd.alignment > 1 && Alignment > sCmd.alignment && addressOffset % (uint)Alignment > 0)
+                                if (Alignment > sCmd.alignment && addressOffset % (uint)Alignment > 0) //Restore alignment address
                                 {
                                     addressOffset -= addressOffset % (uint)Alignment;
                                 }
@@ -649,19 +660,20 @@ namespace PS4_Cheater
         }
 
         public void CompareWithMemoryBufferPointerScanner(ProcessManager processManager, byte[] buffer,
-            PointerList pointerList, ulong base_address)
+            PointerList pointerList, ulong baseAddress)
         {
-            Byte[] address_buf = new byte[8];
+            Byte[] addressBuf = new byte[8];
             for (int i = 0; i + 8 < buffer.LongLength; i += 8)
             {
-                Buffer.BlockCopy(buffer, i, address_buf, 0, 8);
-                ulong address = BitConverter.ToUInt64(address_buf, 0);
-                int sectionID = processManager.MappedSectionList.GetMappedSectionID(address);
-                if (sectionID != -1)
+                Buffer.BlockCopy(buffer, i, addressBuf, 0, 8);
+                ulong address = BitConverter.ToUInt64(addressBuf, 0);
+                int sectionID = address > 0 ? processManager.MappedSectionList.GetMappedSectionID(address) : -1;
+                if (sectionID == -1)
                 {
-                    Pointer pointer = new Pointer(base_address + (ulong)i, address);
-                    pointerList.Add(pointer);
+                    continue;
                 }
+                Pointer pointer = new Pointer(sectionID, baseAddress + (ulong)i, address);
+                pointerList.Add(pointer);
             }
         }
 

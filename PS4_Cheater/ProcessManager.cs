@@ -297,30 +297,30 @@ namespace PS4_Cheater
 
         public void PointerSearchInit(ProcessManager processManager, MemoryHelper memoryHelper, PointerList pointerList)
         {
-            ulong address = this.Start;
+            ulong baseAddress = this.Start;
             int length = this.Length;
 
-            const int buffer_length = 1024 * 1024 * 128;
+            const int bufferLength = 1024 * 1024 * 128;
 
             while (length != 0)
             {
-                int cur_length = buffer_length;
+                int curLength = bufferLength;
 
-                if (cur_length > length)
+                if (curLength > length)
                 {
-                    cur_length = length;
+                    curLength = length;
                     length = 0;
                 }
                 else
                 {
-                    length -= cur_length;
+                    length -= curLength;
                 }
 
-                byte[] buffer = memoryHelper.ReadMemory(address, (int)cur_length);
+                byte[] buffer = memoryHelper.ReadMemory(baseAddress, (int)curLength);
 
-                memoryHelper.CompareWithMemoryBufferPointerScanner(processManager, buffer, pointerList, address);
+                memoryHelper.CompareWithMemoryBufferPointerScanner(processManager, buffer, pointerList, baseAddress);
 
-                address += (ulong)cur_length;
+                baseAddress += (ulong)curLength;
             }
         }
     }

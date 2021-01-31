@@ -14,13 +14,15 @@ namespace PS4_Cheater
     [StructLayoutAttribute(LayoutKind.Sequential, Pack = 1)]
     public struct Pointer
     {
+        public int SectionID;
         public ulong Address;
         public ulong PointerValue;
 
-        public Pointer(ulong Address, ulong PointerValue)
+        public Pointer(int sectionID, ulong address, ulong pointerValue)
         {
-            this.Address = Address;
-            this.PointerValue = PointerValue;
+            SectionID = sectionID;
+            Address = address;
+            PointerValue = pointerValue;
         }
     }
 
@@ -249,7 +251,7 @@ namespace PS4_Cheater
             return index;
         }
 
-        private void PointerFinder(List<long> path_offset, List<Pointer> path_address,
+        private void PointerFinder(List<long> pathOffset, List<Pointer> pathAddress,
             ulong address, List<int> range, int level)
         {
 
@@ -281,7 +283,7 @@ namespace PS4_Cheater
 
                     if (pointerList.Count > 0)
                     {
-                        path_offset.Add((long)(address - pointer_list_order_by_address[i].Address));
+                        pathOffset.Add((long)(address - pointer_list_order_by_address[i].Address));
                         const int max_pointer_count =  15;
                         int cur_pointer_counter = 0;
 
@@ -290,10 +292,10 @@ namespace PS4_Cheater
                         for (int j = 0; j < pointerList.Count; ++j)
                         {
                             bool in_stack = false;
-                            for (int k = 0; k < path_address.Count; ++k)
+                            for (int k = 0; k < pathAddress.Count; ++k)
                             {
-                                if (path_address[k].PointerValue == pointerList[j].PointerValue ||
-                                    path_address[k].Address == pointerList[j].Address)
+                                if (pathAddress[k].PointerValue == pointerList[j].PointerValue ||
+                                    pathAddress[k].Address == pointerList[j].Address)
                                 {
                                     in_stack = true;
                                     break;
@@ -309,12 +311,12 @@ namespace PS4_Cheater
 
                             ++cur_pointer_counter;
 
-                            path_address.Add(pointerList[j]);
-                            PointerFinder(path_offset, path_address, pointerList[j].Address, range, level + 1);
-                            path_address.RemoveAt(path_address.Count - 1);
+                            pathAddress.Add(pointerList[j]);
+                            PointerFinder(pathOffset, pathAddress, pointerList[j].Address, range, level + 1);
+                            pathAddress.RemoveAt(pathAddress.Count - 1);
                         }
 
-                        path_offset.RemoveAt(path_offset.Count - 1);
+                        pathOffset.RemoveAt(pathOffset.Count - 1);
 
                         if (counter >= 1)
                         {
@@ -331,7 +333,7 @@ namespace PS4_Cheater
                 return;
             }
 
-            NewPathGeneratedEvent?.Invoke(this, path_offset, path_address);
+            NewPathGeneratedEvent?.Invoke(this, pathOffset, pathAddress);
         }
 
         public void Save()
@@ -360,7 +362,7 @@ namespace PS4_Cheater
                 ulong Address = UInt64.Parse(elems[0]);
                 ulong PointerValue = UInt64.Parse(elems[1]);
 
-                Pointer pointer = new Pointer(Address, PointerValue);
+                Pointer pointer = new Pointer(-1, Address, PointerValue);
                 pointer_list_order_by_address.Add(pointer);
                 pointer_list_order_by_pointer_value.Add(pointer);
             }

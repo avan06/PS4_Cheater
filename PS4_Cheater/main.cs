@@ -920,6 +920,11 @@
                     CheatOperator destOperator = cheatList[i].GetDestination();
                     dataCheatOperator.Set(destOperator.GetRuntime());
                     row.Cells[CHEAT_LIST_VALUE].Value = dataCheatOperator.Display();
+
+                    if (cheatList[i].CheatType == CheatType.SIMPLE_POINTER_TYPE)
+                    {
+                        row.Cells[CHEAT_LIST_ADDRESS].Value = destOperator.Display();
+                    }
                 }
             }
             catch (Exception exception)
@@ -1295,7 +1300,7 @@
             else if (cheat.CheatType == CheatType.SIMPLE_POINTER_TYPE)
             {
                 SimplePointerCheatOperator destOperator = (SimplePointerCheatOperator)cheat.GetDestination();
-                address = destOperator.getBaseAddress();
+                address = Convert.ToUInt64(destOperator.Display().Replace("p->", ""), 16); //destOperator.getBaseAddress();
             }
             int sectionID = processManager.MappedSectionList.GetMappedSectionID(address);
 
@@ -1376,6 +1381,7 @@
                 {
                     if ("filter".Equals(item.Tag))
                     {
+                        item.Checked = false; //Ensure that MappedSectionList is not selected
                         item.Remove();
                     }
                 }

@@ -254,8 +254,8 @@ namespace PS4_Cheater
 
         private void PointerCheckerPointer_Tick(object sender, EventArgs e)
         {
-            if (!Pointer)
-                return;
+            if (!Pointer) return;
+            if (!IsHandleCreated) return;
 
             try
             {
@@ -277,6 +277,7 @@ namespace PS4_Cheater
                         MemoryHelper.InitMemoryHandler(valueType, CompareType.NONE, true);
                         byte[] data = MemoryHelper.ReadMemory((ulong)(address + base_address), MemoryHelper.Length);
                         offset_label_list[i].Text = MemoryHelper.BytesToString(data);
+                        address_box.Text = (address + base_address).ToString("X");
                     }
                 }
             }

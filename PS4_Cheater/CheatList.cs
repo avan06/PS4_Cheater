@@ -231,6 +231,7 @@ namespace PS4_Cheater
     {
         private const int SECTION_ID = 0;
         private const int ADDRESS_OFFSET = 1;
+        private const int DESTINATION = 6;
 
         public ulong Address { get; set; }
 
@@ -318,14 +319,19 @@ namespace PS4_Cheater
         public bool ParseOldFormat(string[] cheat_elements, ref int start_idx)
         {
             int sectionID = int.Parse(cheat_elements[start_idx + SECTION_ID]);
-            if (sectionID >= ProcessManager.MappedSectionList.Count || sectionID < 0)
+            if (sectionID == -1)
+            {
+                Address = ulong.Parse(cheat_elements[start_idx + DESTINATION], NumberStyles.HexNumber);
+            }
+            else if (sectionID >= ProcessManager.MappedSectionList.Count || sectionID < 0)
             {
                 return false;
             }
-
-            ulong addressOffset = ulong.Parse(cheat_elements[start_idx + ADDRESS_OFFSET], NumberStyles.HexNumber);
-
-            Address = addressOffset + ProcessManager.MappedSectionList[sectionID].Start;
+            else
+            {
+                ulong addressOffset = ulong.Parse(cheat_elements[start_idx + ADDRESS_OFFSET], NumberStyles.HexNumber);
+                Address = addressOffset + ProcessManager.MappedSectionList[sectionID].Start;
+            }
 
             start_idx += 2;
             return true;

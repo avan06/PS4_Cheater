@@ -1066,7 +1066,7 @@
                 this.send_pay_load(this.ip_box.Text, patchPath + @"payload.bin", Convert.ToInt32(this.port_box.Text));
                 Thread.Sleep(1000);
 
-                if (File.Exists(patchPath + @"kpayload.bin"))
+                if (File.Exists(patchPath + @"kpayload.elf"))
                 {
                     this.msg.Text = "Injecting kpayload.elf...";
                     this.send_pay_load(this.ip_box.Text, patchPath + @"kpayload.elf", 9023);

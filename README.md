@@ -7,13 +7,13 @@ Please join us!
 
 ---
 JKPatch libRPC(librpc.dll) and Payload.bin with `6.72` support by `GiantPluto`  
-`Payload.bin` needs to be loaded into the "`PS4_Cheater\672\payload.bin`" directory  
+`Payload.bin` needs to be loaded into the "`PS4_Cheater\6.72\payload.bin`" directory  
 Link: https://twitter.com/DesignCodeRun/status/1293128260079910914  
   
 Versions below `6.72` need to put `payload.bin` and `kpayload.elf` that match the version into:  
-"`PS4_Cheater\505\`"  
-"`PS4_Cheater\455\`"  
-"`PS4_Cheater\405\`"  
+"`PS4_Cheater\5.05\`"  
+"`PS4_Cheater\4.55\`"  
+"`PS4_Cheater\4.05\`"  
 
 ---
 Update PS4_Cheater version to 1.4.9

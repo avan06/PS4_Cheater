@@ -1,6 +1,6 @@
 ﻿namespace PS4_Cheater
 {
-    using librpc;
+    using libdebug;
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
@@ -22,6 +22,7 @@
         private CheatList cheatList = new CheatList();
         private readonly Dictionary<string, int> versions = new Dictionary<string, int>()
         {
+            ["7.02"] = 702,
             ["6.72"] = 672,
             ["5.05"] = 505,
             ["4.55"] = 455,
@@ -961,7 +962,8 @@
 
                 ProcessInfo processInfo = processManager.GetProcessInfo(processes_comboBox.Text);
                 Util.DefaultProcessID = processInfo.pid;
-                processManager.MappedSectionList.InitMemorySectionList(processInfo);
+                ProcessMap pmap = MemoryHelper.GetProcessMaps(processInfo.pid);
+                processManager.MappedSectionList.InitMemorySectionList(pmap);
 
                 sectionListView.BeginUpdate();
                 for (int sectionID = 0; sectionID < processManager.MappedSectionList.Count; ++sectionID)
@@ -1028,10 +1030,10 @@
                     {
                         selectedIdx = idx;
                     }
-                    else if (selectedIdx == 0 && Regex.IsMatch(process.titleId, "CUSA|PCAS|PCJS|PLAS|PLJS|PLJM|PCCS|PCKS"))
-                    {
-                        selectedIdx = idx;
-                    }
+                    //else if (selectedIdx == 0 && Regex.IsMatch(process.titleId, "CUSA|PCAS|PCJS|PLAS|PLJS|PLJM|PCCS|PCKS"))
+                    //{
+                    //    selectedIdx = idx;
+                    //}
                 }
                 this.processes_comboBox.SelectedIndex = selectedIdx;
             }
@@ -1058,22 +1060,22 @@
                 {
                     throw new System.ArgumentException("Unknown version.");
                 }
-                string patchPath = string.Format(@"{0}\{1}\", Application.StartupPath, this.version_list.SelectedItem);
-                if (!File.Exists(patchPath + @"payload.bin"))
+                string patchPath = string.Format(@"{0}\payloads\{1}\", Application.StartupPath, this.version_list.SelectedItem);
+                if (!File.Exists(patchPath + @"ps4debug.bin"))
                 {
-                    throw new ArgumentException(string.Format("payload.bin({0}) not found!", patchPath));
+                    throw new ArgumentException(string.Format("ps4debug.bin({0}) not found!", patchPath));
                 }
-                this.send_pay_load(this.ip_box.Text, patchPath + @"payload.bin", Convert.ToInt32(this.port_box.Text));
+                this.send_pay_load(this.ip_box.Text, patchPath + @"ps4debug.bin", Convert.ToInt32(this.port_box.Text));
                 Thread.Sleep(1000);
 
-                if (File.Exists(patchPath + @"kpayload.elf"))
+                if (File.Exists(patchPath + @"kdebugger.elf"))
                 {
-                    this.msg.Text = "Injecting kpayload.elf...";
-                    this.send_pay_load(this.ip_box.Text, patchPath + @"kpayload.elf", 9023);
+                    this.msg.Text = "Injecting kdebugger.elf...";
+                    this.send_pay_load(this.ip_box.Text, patchPath + @"kdebugger.elf", 9023);
                     Thread.Sleep(2500);
                 }
                 this.msg.ForeColor = Color.Green;
-                this.msg.Text = "Payload injected successfully!";
+                this.msg.Text = "ps4debug.bin injected successfully!";
             }
             catch (Exception exception)
             {

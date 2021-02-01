@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using librpc;
+using libdebug;
 
 namespace PS4_Cheater
 {
@@ -381,7 +381,6 @@ namespace PS4_Cheater
         {
             List<long> path_offset = new List<long>();
             List<Pointer> path_address = new List<Pointer>();
-            bool changed = true;
             PointerFinder(path_offset, path_address, address, range, 0);
         }
 

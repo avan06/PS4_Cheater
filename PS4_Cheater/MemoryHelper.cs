@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
-using librpc;
+using libdebug;
 using System.Threading;
 using System.Globalization;
 using System.Collections;
@@ -46,7 +46,7 @@ namespace PS4_Cheater
 
     public class MemoryHelper
     {
-        public static PS4RPC ps4 = null;
+        public static PS4DBG ps4 = null;
         private static Mutex mutex;
         public List<ScanCommand> ScanList = new List<ScanCommand>();
         public class ScanCommand
@@ -125,7 +125,7 @@ namespace PS4_Cheater
             try
             {
                 mutex.WaitOne();
-                ps4 = new PS4RPC(ip);
+                ps4 = new PS4DBG(ip);
                 ps4.Connect();
                 mutex.ReleaseMutex();
                 return (true, "");
@@ -230,6 +230,23 @@ namespace PS4_Cheater
                 ProcessInfo processInfo = ps4.GetProcessInfo(processID);
                 mutex.ReleaseMutex();
                 return processInfo;
+            }
+            catch
+            {
+                mutex.ReleaseMutex();
+                ProcessInfo info = new ProcessInfo();
+                return info;
+            }
+        }
+        
+        public static ProcessMap GetProcessMaps(int processID)
+        {
+            mutex.WaitOne();
+            try
+            {
+                ProcessMap processMap = ps4.GetProcessMaps(processID);
+                mutex.ReleaseMutex();
+                return processMap;
             }
             catch
             {

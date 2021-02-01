@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using librpc;
+using libdebug;
 
 namespace PS4_Cheater
 {
@@ -116,7 +116,7 @@ namespace PS4_Cheater
             count++;
         }
 
-            public void Clear()
+        public void Clear()
         {
             count = 0;
             buffer_tag_offset = 0;
@@ -446,16 +446,15 @@ namespace PS4_Cheater
             return result_list;
         }
 
-        public void InitMemorySectionList(ProcessInfo pi)
+        public void InitMemorySectionList(ProcessMap pm)
         {
             mapped_section_list.Clear();
             TotalMemorySize = 0;
 
-            if (pi.entries == null) return;
-
-            for (int i = 0; i < pi.entries.Length; i++)
+            if (pm.entries == null) return;
+            for (int i = 0; i < pm.entries.Length; i++)
             {
-                MemoryEntry entry = pi.entries[i];
+                MemoryEntry entry = pm.entries[i];
                 if ((entry.prot & 0x1) == 0x1)
                 {
                     ulong length = entry.end - entry.start;
@@ -565,7 +564,7 @@ namespace PS4_Cheater
         public ProcessInfo GetProcessInfo(string process_name)
         {
             ProcessList processList = MemoryHelper.GetProcessList();
-            ProcessInfo processInfo = null;
+            ProcessInfo processInfo = new ProcessInfo();
             foreach (Process process in processList.processes)
             {
                 if (process.name == process_name)

@@ -70,10 +70,10 @@
   <PropertyGroup />
   <ItemGroup>
     <Reference Include="Be.Windows.Forms.HexBox">
-      <HintPath>.\Be.Windows.Forms.HexBox.dll</HintPath>
+      <HintPath>lib\Be.Windows.Forms.HexBox.dll</HintPath>
     </Reference>
-    <Reference Include="librpc">
-      <HintPath>.\librpc.dll</HintPath>
+    <Reference Include="libdebug">
+      <HintPath>lib\libdebug.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />

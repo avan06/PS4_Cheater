@@ -11,7 +11,7 @@ namespace PS4_Cheater
     class PeekThread
     {
         private ProcessManager processManager;
-        private BackgroundWorker worker;
+        //private BackgroundWorker worker;
         private List<byte[]> buffer_queue;
 
         private Semaphore consumer_mutex;
@@ -58,7 +58,7 @@ namespace PS4_Cheater
                         length -= cur_length;
                     }
 
-                    if (worker.CancellationPending) break;
+                    //if (worker.CancellationPending) break;
 
                     producer_mutex.WaitOne();
                     //buffer_queue[productor_idx] = memoryHelper.ReadMemory(address, (int)cur_length);

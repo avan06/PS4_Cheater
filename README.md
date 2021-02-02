@@ -49,7 +49,7 @@ Assuming the data structure: HP:950(4 byte) / MaxHP:1000(4 byte) / MP:50(2 byte)
 Input value: 950 1000 2:50 2:100  
 
 * Processes Box  
-Executing the Refresh Processes will automatically select the default program "`eboot.bin`".  
+Executing the Refresh Processes will automatically select the default program "`eboot.bin`", or the title starts with "`CUSA,PCAS,PCJS,PLAS,PLJS,PLJM,PCCS,PCKS`".  
 
 * Section List  
 Use ListView instead of ListBox to show all sections info.  

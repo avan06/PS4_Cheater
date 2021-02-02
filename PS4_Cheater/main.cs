@@ -1030,10 +1030,10 @@
                     {
                         selectedIdx = idx;
                     }
-                    //else if (selectedIdx == 0 && Regex.IsMatch(process.titleId, "CUSA|PCAS|PCJS|PLAS|PLJS|PLJM|PCCS|PCKS"))
-                    //{
-                    //    selectedIdx = idx;
-                    //}
+                    else if (selectedIdx == 0 && Regex.IsMatch(process.titleId, "CUSA|PCAS|PCJS|PLAS|PLJS|PLJM|PCCS|PCKS"))
+                    {
+                        selectedIdx = idx;
+                    }
                 }
                 this.processes_comboBox.SelectedIndex = selectedIdx;
             }
@@ -1068,12 +1068,12 @@
                 this.send_pay_load(this.ip_box.Text, patchPath + @"ps4debug.bin", Convert.ToInt32(this.port_box.Text));
                 Thread.Sleep(1000);
 
-                if (File.Exists(patchPath + @"kdebugger.elf"))
-                {
-                    this.msg.Text = "Injecting kdebugger.elf...";
-                    this.send_pay_load(this.ip_box.Text, patchPath + @"kdebugger.elf", 9023);
-                    Thread.Sleep(2500);
-                }
+                //if (File.Exists(patchPath + @"kdebugger.elf"))
+                //{
+                //    this.msg.Text = "Injecting kdebugger.elf...";
+                //    this.send_pay_load(this.ip_box.Text, patchPath + @"kdebugger.elf", 9023);
+                //    Thread.Sleep(2500);
+                //}
                 this.msg.ForeColor = Color.Green;
                 this.msg.Text = "ps4debug.bin injected successfully!";
             }
